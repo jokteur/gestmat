@@ -4,12 +4,12 @@
 #include <string>
 #include <vector>
 
+#include "app/jobscheduler.h"
+#include "app/settings.h"
+#include "app/util.h"
 #include "imgui.h"
-#include "jobscheduler.h"
 #include "nfd.h"
 #include "rendering/drawables.h"
-#include "settings.h"
-#include "util.h"
 
 namespace Rendering {
 /**

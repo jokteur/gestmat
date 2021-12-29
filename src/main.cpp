@@ -5,9 +5,12 @@
 #include "python/init_python.h"
 #include "python/py_api.h"
 #include "rendering/gui.h"
+#include "core/util.h"
 
 int main(int, char**) {
     PyAPI::Handler::getInstance();
+    std::cout << "date formating: " << core::getCurrentDate().format("%d/%m/%Y") << std::endl;
+    std::cout << "date formating: " << core::Date(29, 04, 1995).format("%m-%Y") << std::endl;
 
     GLFWwindowHandler::focus_all = true;
 

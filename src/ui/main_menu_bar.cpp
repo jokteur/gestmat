@@ -2,8 +2,8 @@
 
 #include "app/log.h"
 #include "gui.h"
-#include "rendering/ui/modales/modals.h"
-#include "rendering/ui/shortcuts_list.h"
+#include "ui/modales/modals.h"
+#include "ui/shortcuts_list.h"
 
 void Rendering::MainMenuBar::ImGuiDraw(GLFWwindow *window, Rect &parent_dimension) {
     if (ImGui::BeginMainMenuBar()) {

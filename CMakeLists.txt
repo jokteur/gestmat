@@ -7,9 +7,8 @@ set(CMAKE_EXE_LINKER_FLAGS -static)
 set(GCC_COVERAGE_COMPILE_FLAGS "-s -O3 -fvisibility=hidden")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
-set(INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/out)
+set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/build/install/0.1)
 
-set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 # Python and TOML11 do not like each other
 # This flag avoids interopabilities problems
@@ -45,15 +44,7 @@ set(GLFW_INSTALL "Generate installation target" OFF)
 add_subdirectory(vendors/glfw)
 include_directories(vendors/glfw/include)
 
-set(INSTALL_DIR "0.1")
 
-
-# ----
-# gl3w
-# ----
-
-# include_directories(vendors/gl3w/include)
-# set(gl3w_src vendors/gl3w/src/gl3w.c)
 
 # ---------------
 # STB image write
@@ -162,10 +153,10 @@ file (GLOB _project_src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
         src/python/*.cpp
         src/core/*.cpp src/core/*.h
         src/rendering/*.cpp src/rendering/*.h
-        src/rendering/ui/*.cpp src/rendering/ui/*.h
-        src/rendering/ui/panels/*.h src/rendering/ui/panels/*.cpp
-        src/rendering/ui/modales/*.h src/rendering/ui/modales/*.cpp
-        src/rendering/views/*.cpp src/rendering/views/*.h)
+        src/ui/*.cpp src/ui/*.h
+        src/ui/panels/*.h src/ui/panels/*.cpp
+        src/ui/modales/*.h src/ui/modales/*.cpp
+        src/ui/views/*.cpp src/ui/views/*.h)
 
 set(all_sources ${_project_src} ${imgui_src} ${imgui_binding})
 list(REMOVE_ITEM all_sources "src/main.cpp")
@@ -181,5 +172,5 @@ target_link_libraries(${PROJECT_NAME}_lib ${Python_LIBRARIES})
 add_executable(${PROJECT_NAME} src/main.cpp)
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
 
-install(TARGETS ${PROJECT_NAME} DESTINATION ${INSTALL_DIR})
-install(DIRECTORY assets DESTINATION ${INSTALL_DIR})
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY assets DESTINATION ${CMAKE_INSTALL_PREFIX})

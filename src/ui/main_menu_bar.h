@@ -9,7 +9,7 @@
 #include "imgui.h"
 #include "nfd.h"
 #include "rendering/drawables.h"
-#include "rendering/ui/modales/error_message.h"
+#include "ui/modales/error_message.h"
 
 namespace Rendering {
 class MainMenuBar : public AbstractLayout {

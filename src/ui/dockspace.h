@@ -8,7 +8,7 @@
 #include "imgui.h"
 #include "nfd.h"
 #include "rendering/drawables.h"
-#include "rendering/ui/main_menu_bar.h"
+#include "ui/main_menu_bar.h"
 
 namespace Rendering {
 typedef std::function<void(ImGuiID* dock_id)> set_dock_fct;

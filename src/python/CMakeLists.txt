@@ -4,7 +4,7 @@ set(_PYTHON_VERSION_NO_DOTS "${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
 # Install the python scripts
 install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/src/scripts
-    DESTINATION ${INSTALL_DIR}/python
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/python
     PATTERN ".git" EXCLUDE
     PATTERN ".gitignore" EXCLUDE
     PATTERN ".arcconfig" EXCLUDE
@@ -15,7 +15,7 @@ install(
 
 install(
     PROGRAMS ${Python_EXECUTABLE}
-    DESTINATION ${INSTALL_DIR}/python/bin
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin
 )
 
 
@@ -33,7 +33,7 @@ endforeach()
 
 install(
    DIRECTORY ${Python_STDLIB}
-   DESTINATION ${INSTALL_DIR}/python/
+   DESTINATION ${CMAKE_INSTALL_PREFIX}/python/
    PATTERN "__pycache__" EXCLUDE               # * any cache *
    PATTERN "config-${Python_VERSION}m/*.a" EXCLUDE  # static lib
    PATTERN "lib2to3" EXCLUDE                   # ./lib2to3
@@ -52,12 +52,12 @@ set(Python_RUNTIME_LIBRARY_DIRS "C:\\Users\\jokte\\.conda\\envs\\python_app")
 # get the last part of the include dir, will be 'python{version}{abiflag}',
 install(
         FILES ${Python_INCLUDE_DIRS}/pyconfig.h
-        DESTINATION ${INSTALL_DIR}/python
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/python
 )
 
 install(
     DIRECTORY ${Python_RUNTIME_LIBRARY_DIRS}/DLLs
-    DESTINATION ${INSTALL_DIR}/python
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/python
     CONFIGURATIONS Release;RelWithDebInfo;MinSizeRel
     PATTERN "*.pdb" EXCLUDE
     PATTERN "*_d.*" EXCLUDE
@@ -65,7 +65,7 @@ install(
 #
 install(
     DIRECTORY ${Python_RUNTIME_LIBRARY_DIRS}/DLLs
-    DESTINATION ${INSTALL_DIR}/python
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/python
     CONFIGURATIONS Debug
 )
 
@@ -73,5 +73,5 @@ install(
 install(
     FILES ${Python_RUNTIME_LIBRARY_DIRS}/python${_PYTHON_VERSION_NO_DOTS}.dll
         ${Python_RUNTIME_LIBRARY_DIRS}/python${Python_VERSION_MAJOR}.dll
-    DESTINATION ${INSTALL_DIR}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}
 )

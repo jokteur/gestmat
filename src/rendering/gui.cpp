@@ -2,11 +2,11 @@
 
 #include <utility>
 
-#include "rendering/ui/shortcuts_list.h"
-#include "rendering/ui/modales/error_message.h"
-#include "rendering/views/default_view.h"
-#include "settings.h"
-#include "events.h"
+#include "app/events.h"
+#include "app/settings.h"
+#include "ui/modales/error_message.h"
+#include "ui/shortcuts_list.h"
+#include "ui/views/default_view.h"
 
 void Rendering::GUI::init(Rendering::Application &app) {
     if (initialized)
@@ -16,8 +16,7 @@ void Rendering::GUI::init(Rendering::Application &app) {
 
     try {
         Settings::getInstance().loadSettings("settings.toml");
-    }
-    catch (std::exception &e) {
+    } catch (std::exception &e) {
         show_error_modal("Load setting error",
                          "An error occured when loading settings file (settings.toml)\n"
                          "Default settings have been applied",
@@ -32,7 +31,7 @@ void Rendering::GUI::init(Rendering::Application &app) {
 
     listener_.filter = "views/set_view";
     listener_.callback = [=](Event_ptr &event) {
-        auto view_event = reinterpret_cast<SetViewEvent*>(event.get());
+        auto view_event = reinterpret_cast<SetViewEvent *>(event.get());
         setView(view_event->getView());
     };
 
@@ -50,7 +49,7 @@ void Rendering::GUI::setView(std::shared_ptr<View> view) {
     if (!initialized)
         return;
 
-//    view_draw_ = std::dynamic_pointer_cast<AbstractDrawable>(view);
+    //    view_draw_ = std::dynamic_pointer_cast<AbstractDrawable>(view);
 
     app_->getMainWindow().removeDrawable(view_draw_);
     if (view_ != nullptr) {
@@ -59,11 +58,10 @@ void Rendering::GUI::setView(std::shared_ptr<View> view) {
         }
     }
 
-//    app_->getMainWindow().addDrawable(view_draw_);
+    //    app_->getMainWindow().addDrawable(view_draw_);
     view_ = std::move(view);
 
     for (auto &drawable : view_->getDrawables()) {
         app_->getMainWindow().addDrawable(drawable);
     }
 }
-
