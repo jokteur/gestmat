@@ -1,10 +1,55 @@
 #include <cstdint>
 #include <string>
 
-namespace core {
+#include "util.h"
 
+namespace core {
     namespace Item {
-        class Person {
+        class Base {
+        protected:
+            int m_id = 0;
+        public:
+            static int ID;
+            Base() {
+                m_id = ID;
+                ID++;
+            }
+        };
+        class Property : Base {
+
+        };
+        class PropertyValue : Base {
+
+        };
+        class Category : Base {
+
+        };
+        class Item : Base {
+
+        };
+
+        int Base::ID = 0;
+
+        struct Person : Base {
+            std::string m_name;
+            std::string m_surname;
+            std::string m_place;
+            std::string m_note;
+            Date m_birthday;
+
+            /**
+             * @brief Construct a new Person object
+             *
+             * @param name
+             * @param surname
+             * @param place
+             * @param note
+             * @param birthday
+             */
+            Person(std::string name = "", std::string surname = "", std::string place = "", std::string note = "", Date birthday = Date());
+        };
+        class Loan : Base {
+
         };
         class Manager {
         private:

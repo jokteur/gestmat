@@ -1,5 +1,6 @@
 #include "util.h"
 
+#pragma warning(disable : 4996) //_CRT_SECURE_NO_WARNINGS
 
 core::Date::Date(uint8_t day, uint8_t month, uint16_t year) {
     m_day = day;
@@ -58,7 +59,7 @@ core::Date core::getCurrentDate() {
     std::time_t t = std::time(0);   // get time now
     std::tm* now = std::localtime(&t);
 
-    return core::Date(now->tm_mday, now->tm_mon + 1, now->tm_year + 1900);
+    return core::Date((uint8_t)now->tm_mday, (uint8_t)now->tm_mon + 1, (uint16_t)now->tm_year + 1900);
 }
 
 bool core::verifyDate(uint8_t day, uint8_t month, uint16_t year) {

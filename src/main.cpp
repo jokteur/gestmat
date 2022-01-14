@@ -1,29 +1,56 @@
 #include <iostream>
+#include <tempo.h>
 
-#include "GLFWwindow_handler.h"
-#include "app/settings.h"
-#include "python/init_python.h"
-#include "python/py_api.h"
-#include "rendering/gui.h"
-#include "core/util.h"
+class MainApp : public Tempo::App {
+private:
+    Tempo::FontID m_font_regular;
+    Tempo::FontID m_font_italic;
+    Tempo::FontID m_font_bold;
+    bool m_open = true;
+public:
+    virtual ~MainApp() {}
 
-int main(int, char**) {
-    PyAPI::Handler::getInstance();
-    std::cout << "date formating: " << core::getCurrentDate().format("%d/%m/%Y") << std::endl;
-    std::cout << "date formating: " << core::Date(29, 04, 1995).format("%m-%Y") << std::endl;
+    void InitializationBeforeLoop() override {
+        m_font_regular = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Regular.ttf", 16).value();
+        m_font_italic = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Italic.ttf", 16).value();
+        m_font_bold = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Bold.ttf", 16).value();
+    }
 
-    GLFWwindowHandler::focus_all = true;
+    void FrameUpdate() override {
+#ifdef IMGUI_HAS_VIEWPORT
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+#else 
+        ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+        ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+#endif
+        ImGui::Begin("My window", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
 
-    // Test a simple initialization with an empty window
-    Rendering::Application app("App template", 1280, 720);
+        if (ImGui::Button("Click me")) {
+            std::cout << "Hello world" << std::endl;
+        }
+        ImGui::Text("Welcome to the multi-font application");
+        Tempo::PushFont(m_font_bold);
+        ImGui::Text("This is bold");
+        Tempo::PopFont();
+        ImGui::End();
+        ImGui::ShowDemoWindow();
 
-    app.addImGuiFlags(ImGuiConfigFlags_ViewportsEnable | ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard);
+    }
+    void BeforeFrameUpdate() override {}
+};
 
-    app.init();
-    PyAPI::init();
+int main() {
+    Tempo::Config config{
+        .app_name = "TestApp",
+        .app_title = "Hello world",
+        // .viewports_focus_all = true,
+    };
 
-    Rendering::GUI::getInstance().init(app);
+    MainApp* app = new MainApp();
+    Tempo::Run(app, config);
 
-    app.loop();
     return 0;
 }
