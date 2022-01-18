@@ -31,6 +31,8 @@ int main() {
         .select = {"left", "right"},
         });
 
+    std::cout << prop_num << " " << prop_type << " " << prop_side << std::endl;
+
     assert(!manager.isRetired(prop_side).value());
     assert(manager.retireProperty(prop_side));
     assert(!manager.retireProperty(prop_side));
@@ -104,6 +106,10 @@ int main() {
     assert(manager.getAllLoans().size() == 2);
     manager.retireLoan(loan3);
     assert(manager.isRetired(loan3).value());
+
+
+    // MainApp* app = new MainApp();
+    // Tempo::Run(app, config);
 
     return 0;
 }

@@ -28,7 +28,7 @@ namespace core {
         /**
          * @brief Construct an empty Date object
          */
-        Date();
+        Date() = default;
 
         /**
          * @brief Construct a new Date object

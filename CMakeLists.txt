@@ -86,18 +86,22 @@ file (GLOB source_list RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
         src/*.cpp src/*.h
         src/python/*.h
         src/python/*.cpp
-        src/core/*.cpp src/core/*.h
+        src/core/util.h src/core/util.cpp
+        src/core/item_manager.cpp src/core/item_manager.h
         src/ui/*.cpp src/ui/*.h
-        src/main.cpp
     )
 
-add_executable(${PROJECT_NAME} ${source_list})
+add_executable(${PROJECT_NAME} ${source_list} src/main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE Tempo ${Python_LIBRARIES})
+target_include_directories(Tempo PUBLIC "${PROJECT_SOURCE_DIR}/vendors/TempoApp/include")
 
 # Copy the data (such as fonts) in build directory
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/data/ $<TARGET_FILE_DIR:${PROJECT_NAME}>) 
+
+# add_library(${PROJECT_NAME}_lib ${source_list})
+# add_subdirectory(tests)
 
 # Set compiler options
 if(MSVC)
