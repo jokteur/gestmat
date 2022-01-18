@@ -77,6 +77,14 @@ include_directories(vendors/toml11)
 add_subdirectory(vendors/TempoApp)
 include_directories(vendors/TempoApp/include)
 
+# ----
+# Zlib
+# ----
+add_subdirectory(vendors/zlib)
+include_directories(vendors/zlib)
+# Hack because zconf.h keeps disappearing when building
+target_include_directories(zlib PUBLIC "${PROJECT_SOURCE_DIR}/vendors/zconf")
+
 
 # -----------
 # Main source
@@ -86,19 +94,21 @@ file (GLOB source_list RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
         src/*.cpp src/*.h
         src/python/*.h
         src/python/*.cpp
-        src/core/util.h src/core/util.cpp
-        src/core/item_manager.cpp src/core/item_manager.h
+        src/core/*.h src/core/*.cpp
         src/ui/*.cpp src/ui/*.h
     )
 
 add_executable(${PROJECT_NAME} ${source_list} src/main.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE Tempo ${Python_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE zlib Tempo ${Python_LIBRARIES})
 target_include_directories(Tempo PUBLIC "${PROJECT_SOURCE_DIR}/vendors/TempoApp/include")
+# target_include_directories(zlib PUBLIC "${PROJECT_SOURCE_DIR}/vendors/zlib")
 
 # Copy the data (such as fonts) in build directory
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/data/ $<TARGET_FILE_DIR:${PROJECT_NAME}>) 
+
+# -- Testing --
 
 # add_library(${PROJECT_NAME}_lib ${source_list})
 # add_subdirectory(tests)
