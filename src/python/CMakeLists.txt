@@ -12,13 +12,10 @@ install(
     PATTERN "__pycache__" EXCLUDE
 )
 
-
 install(
     PROGRAMS ${Python_EXECUTABLE}
     DESTINATION ${CMAKE_INSTALL_PREFIX}/python/bin
 )
-
-
 
 # Check for the required packages
 file(STRINGS ../scripts/requirements.txt PYTHON_REQUIREMENTS)

@@ -4,6 +4,8 @@
 #include <string>
 #include <ctime>
 
+#include <nlohmann/json.hpp>
+
 namespace core {
     /**
      * @brief Verifies if a date is correct
@@ -16,13 +18,15 @@ namespace core {
      */
     bool verifyDate(uint8_t day, uint8_t month, uint16_t year);
 
+    long long int getTimestamp();
+
     class Date {
     private:
-        uint8_t m_day = 0;
-        uint8_t m_month = 0;
-        uint16_t m_year = 0;
+        uint8_t day = 0;
+        uint8_t month = 0;
+        uint16_t year = 0;
 
-        bool m_is_valid = false;
+        bool is_valid = false;
 
     public:
         /**
@@ -38,6 +42,8 @@ namespace core {
          * @param year
          */
         Date(uint8_t day, uint8_t month, uint16_t year);
+
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Date, day, month, year, is_valid);
 
         std::string format(std::string fmt);
     };

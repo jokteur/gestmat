@@ -7,3 +7,6 @@
 [submodule "vendors/TempoApp"]
 	path = vendors/TempoApp
 	url = git@github.com:jokteur/TempoApp.git
+[submodule "vendors/json"]
+	path = vendors/json
+	url = https://github.com/nlohmann/json.git

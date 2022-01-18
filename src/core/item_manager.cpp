@@ -1,8 +1,9 @@
 #include "item_manager.h"
 
+#include <iostream> 
 namespace core {
     namespace Item {
-        int Base::ID = 0;
+        ObjectID Base::ID = 0;
 
         template<typename V, typename T>
         bool find_in_map(const std::map<V, T>& map, V id) {
@@ -17,6 +18,32 @@ namespace core {
                 return true;
             }
             return false;
+        }
+        template<typename V, typename T>
+        void copy_map(const std::map<V, std::shared_ptr<T>>& source, std::map<V, std::shared_ptr<T>>& destination) {
+            for (auto& pair : source) {
+                destination[pair.first] = std::make_shared<T>(*pair.second);
+            }
+        }
+
+        Manager::Manager(const Manager& other) {
+            m_item_loan_map = other.m_item_loan_map;
+            m_person_loan_map = other.m_person_loan_map;
+
+            copy_map<ItemID, Item>(other.m_registered_items, m_registered_items);
+            copy_map<ItemID, Item>(other.m_retired_items, m_retired_items);
+
+            copy_map<CategoryID, Category>(other.m_registered_categories, m_registered_categories);
+            copy_map<CategoryID, Category>(other.m_retired_categories, m_retired_categories);
+
+            copy_map<PropertyID, Property>(other.m_registered_properties, m_registered_properties);
+            copy_map<PropertyID, Property>(other.m_retired_properties, m_retired_properties);
+
+            copy_map<PersonID, Person>(other.m_registered_persons, m_registered_persons);
+            copy_map<PersonID, Person>(other.m_retired_persons, m_retired_persons);
+
+            copy_map<LoanID, Loan>(other.m_registered_loans, m_registered_loans);
+            copy_map<LoanID, Loan>(other.m_retired_loans, m_retired_loans);
         }
 
         std::optional<bool> Manager::isRetired(ObjectID id) {
@@ -73,6 +100,13 @@ namespace core {
                 set.insert(cat_pair.first);
             }
             for (auto cat_pair : m_retired_loans) {
+                set.insert(cat_pair.first);
+            }
+            return set;
+        }
+        std::set<LoanID> Manager::getActiveLoans() {
+            std::set<LoanID> set;
+            for (auto cat_pair : m_registered_loans) {
                 set.insert(cat_pair.first);
             }
             return set;
@@ -257,6 +291,7 @@ namespace core {
                 m_item_loan_map[item_id] = std::set<LoanID>();
             }
             m_item_loan_map[item_id].insert(loan.id);
+            m_person_loan_map[person_id].insert(loan.id);
             return std::optional<LoanID>(loan.id);
         }
 

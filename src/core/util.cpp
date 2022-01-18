@@ -1,21 +1,28 @@
 #include "util.h"
 
+#include <chrono>
+
 #pragma warning(disable : 4996) //_CRT_SECURE_NO_WARNINGS
 
-core::Date::Date(uint8_t day, uint8_t month, uint16_t year) {
-    m_day = day;
-    m_month = month;
-    m_year = year;
+core::Date::Date(uint8_t day_, uint8_t month_, uint16_t year_) {
+    day = day_;
+    month = month_;
+    year = year_;
 
-    if (!verifyDate(day, month, year)) {
-        m_day = 0;
-        m_month = 0;
-        m_year = 0;
+    if (!verifyDate(day_, month_, year_)) {
+        day = 0;
+        month = 0;
+        year = 0;
     }
 }
 
+long long int core::getTimestamp() {
+    const auto p1 = std::chrono::system_clock::now();
+    return std::chrono::duration_cast<std::chrono::seconds>(p1.time_since_epoch()).count();
+}
+
 std::string core::Date::format(std::string fmt) {
-    if (m_day == 0 || m_month == 0 || m_year == 0)
+    if (day == 0 || month == 0 || year == 0)
         return "";
 
     std::string return_str;
@@ -25,17 +32,17 @@ std::string core::Date::format(std::string fmt) {
         if (modifier_flag) {
             switch (c) {
             case 'd':
-                if (m_day < 10)
+                if (day < 10)
                     return_str += '0';
-                return_str += std::to_string(m_day);
+                return_str += std::to_string(day);
                 break;
             case 'm':
-                if (m_month < 10)
+                if (month < 10)
                     return_str += '0';
-                return_str += std::to_string(m_month);
+                return_str += std::to_string(month);
                 break;
             case 'Y':
-                return_str += std::to_string(m_year);
+                return_str += std::to_string(year);
                 break;
 
             default:

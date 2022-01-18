@@ -85,6 +85,11 @@ include_directories(vendors/zlib)
 # Hack because zconf.h keeps disappearing when building
 target_include_directories(zlib PUBLIC "${PROJECT_SOURCE_DIR}/vendors/zconf")
 
+# ----
+# Json
+# ----
+add_subdirectory(vendors/json)
+include_directories(vendors/json/single_include)
 
 # -----------
 # Main source
@@ -99,14 +104,16 @@ file (GLOB source_list RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
 add_executable(${PROJECT_NAME} ${source_list} src/main.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE zlib Tempo ${Python_LIBRARIES})
-target_include_directories(Tempo PUBLIC "${PROJECT_SOURCE_DIR}/vendors/TempoApp/include")
-# target_include_directories(zlib PUBLIC "${PROJECT_SOURCE_DIR}/vendors/zlib")
+target_link_libraries(${PROJECT_NAME} PRIVATE zlib nlohmann_json Tempo ${Python_LIBRARIES})
 
 # Copy the data (such as fonts) in build directory
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+COMMAND ${CMAKE_COMMAND} -E copy_directory
+${CMAKE_SOURCE_DIR}/data/ $<TARGET_FILE_DIR:${PROJECT_NAME}>) 
+
+add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/data/ $<TARGET_FILE_DIR:${PROJECT_NAME}>) 
+    ${CMAKE_SOURCE_DIR}/src/scripts $<TARGET_FILE_DIR:${PROJECT_NAME}>/python/scripts) 
 
 # -- Testing --
 
@@ -121,4 +128,4 @@ else()
 endif()
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(DIRECTORY data DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/data/ DESTINATION ${CMAKE_INSTALL_PREFIX})

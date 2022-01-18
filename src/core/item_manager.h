@@ -10,10 +10,12 @@
 #include <chrono>
 
 #include "util.h"
+#include <nlohmann/json.hpp>
 
 namespace core {
     namespace Item {
-        typedef int ObjectID;
+        using namespace nlohmann;
+        typedef long long int ObjectID;
         typedef ObjectID ItemID;
         typedef ObjectID CategoryID;
         typedef ObjectID PropertyID;
@@ -33,6 +35,10 @@ namespace core {
                 ID++;
             }
 
+            static ObjectID getID() {
+                return ID;
+            }
+
             static void setID(int id) {
                 ID = id;
             }
@@ -45,7 +51,7 @@ namespace core {
          */
         struct Note : public Base {
             std::string content;
-            std::chrono::seconds timestamp;
+            long long int timestamp;
         };
 
 
@@ -100,7 +106,6 @@ namespace core {
 
         class Manager {
         private:
-
             std::map<ItemID, std::set<LoanID>> m_item_loan_map;
             std::map<PersonID, std::set<LoanID>> m_person_loan_map;
 
@@ -118,8 +123,11 @@ namespace core {
 
             std::optional<LoanID> new_loan(ItemID item_id, Note note, Date date, PersonID person_id);
 
+            friend class Workspace;
         public:
             Manager() = default;
+
+            Manager(const Manager& other);
 
             /**
              * @brief Returns true if retired, false if not
@@ -135,6 +143,7 @@ namespace core {
             // Returns all properties, retired or not
             std::set<PropertyID> getAllProperties();
             std::set<LoanID> getAllLoans();
+            std::set<LoanID> getActiveLoans();
 
             std::optional<Item_ptr> getItem(ItemID item_id);
             std::optional<Category_ptr> getCategory(CategoryID cat_id);
