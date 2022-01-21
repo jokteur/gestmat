@@ -18,14 +18,6 @@ int main() {
         .app_title = "Gestion matériel",
     };
 
-    Item::Workspace& workspace = Item::Workspace::getInstance();
-
-    auto files = workspace.getCompatibleFiles();
-    for (auto file : files) {
-        std::cout << file.filename << " " << file.timestamp << " " << file.action_name << std::endl;
-        workspace.loadIntoCurrent(file.path);
-    }
-
     MainApp* app = new MainApp();
     Tempo::Run(app, config);
 

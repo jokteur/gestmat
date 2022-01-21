@@ -4,12 +4,19 @@
 #include "core/item_manager.h"
 
 void MainApp::InitializationBeforeLoop() {
-    m_font_regular = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Regular.ttf", 18).value();
-    m_font_italic = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Italic.ttf", 18).value();
-    m_font_bold = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Bold.ttf", 18).value();
-    m_font_title = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Regular.ttf", 30).value();
+    ui_state->font_regular = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Regular.ttf", 18).value();
+    ui_state->font_italic = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Italic.ttf", 18).value();
+    ui_state->font_bold = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Bold.ttf", 18).value();
+    ui_state->font_title = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Regular.ttf", 30).value();
 
     setLightStyle();
+
+    auto files = m_workspace.getCompatibleFiles();
+    core::Item::File last;
+    for (const auto& file : files) {
+        last = file;
+    }
+    m_workspace.loadIntoCurrent(last.path);
 }
 
 void MainApp::FrameUpdate() {
@@ -24,12 +31,21 @@ void MainApp::FrameUpdate() {
 #endif
     ImGui::Begin("Main window", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
 
-    if (ImGui::Button("Click me")) {
-        core::Item::Property property = { .name = "lolilol" };
+    m_menubar->FrameUpdate();
+    m_navbar->FrameUpdate();
 
-        std::cout << property.id << std::endl;
+    switch (ui_state->active_panel) {
+    case UIState::LOAN:
+        m_loans->FrameUpdate();
+        break;
+    case UIState::MANAGEMENT:
+        m_management->FrameUpdate();
+        break;
+    case UIState::STATE:
+        m_state->FrameUpdate();
+        break;
     }
     ImGui::End();
-
 }
-void MainApp::BeforeFrameUpdate() {}
+void MainApp::BeforeFrameUpdate() {
+}

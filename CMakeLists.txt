@@ -100,6 +100,8 @@ file (GLOB source_list RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
         src/python/*.h
         src/python/*.cpp
         src/core/*.h src/core/*.cpp
+        src/ui/drawables/*.h src/ui/drawables/*.cpp
+        src/ui/widgets/*.h src/ui/widgets/*.cpp
         src/ui/*.cpp src/ui/*.h
     )
 
