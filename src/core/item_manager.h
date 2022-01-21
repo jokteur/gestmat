@@ -87,13 +87,13 @@ namespace core {
             std::string surname;
             std::string place;
             std::vector<Note> notes;
-            std::map<LoanID, Loan> loans;
             core::Date birthday;
         };
         struct Loan : public Base {
             ItemID item;
             Note note;
             core::Date date;
+            core::Date date_back;
             PersonID person;
             core::Date remainder_date;
         };
@@ -174,7 +174,7 @@ namespace core {
 
             std::optional<LoanID> newLoan(ItemID item_id, Note note, Date date, Person person);
             std::optional<LoanID> newLoan(ItemID item_id, Note note, Date date, PersonID person_id);
-            bool retireLoan(LoanID loan_id);
+            bool retireLoan(LoanID loan_id, core::Date date_back);
             bool unretireLoan(LoanID loan_id);
         };
     }  // namespace Item

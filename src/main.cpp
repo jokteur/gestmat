@@ -1,5 +1,6 @@
 #include <iostream>
 #include <tempo.h>
+#include <chrono>
 
 #include "ui/main_window.h"
 #include "python/py_api.h"
@@ -18,13 +19,12 @@ int main() {
     };
 
     Item::Workspace& workspace = Item::Workspace::getInstance();
-    // workspace.save("save1");
 
-    workspace.loadDir();
-
-    auto mnger = workspace.getCurrentManager();
-    std::cout << "Size: " << mnger->getAllLoans().size() << std::endl;
-
+    auto files = workspace.getCompatibleFiles();
+    for (auto file : files) {
+        std::cout << file.filename << " " << file.timestamp << " " << file.action_name << std::endl;
+        workspace.loadIntoCurrent(file.path);
+    }
 
     MainApp* app = new MainApp();
     Tempo::Run(app, config);

@@ -8,9 +8,12 @@ namespace core {
     namespace Item {
         using Manager_ptr = std::shared_ptr<Manager>;
 
-        struct HistoryPoint {
-            std::string name;
-            Manager_ptr manager;
+        typedef std::vector<std::pair<std::string, std::string>> LoadError;
+
+        struct File {
+            std::string path;
+            std::string filename;
+            std::string action_name;
             long long int timestamp;
         };
 
@@ -18,11 +21,12 @@ namespace core {
         private:
             static Workspace& m_workspace_inst;
 
-            std::map<long long int, HistoryPoint> m_history;
             Manager_ptr m_current_manager;
             std::string m_work_dir;
             std::string m_docs_dir;
             int m_max_length = 1000;
+
+            bool m_compression = true;
 
             Workspace() {
                 setWorkDir("");
@@ -30,9 +34,8 @@ namespace core {
 
             std::string _get_dir_path();
 
-            bool _save(std::string path, const std::string& content);
-            bool _load(const std::string& path, HistoryPoint& point);
-            void _insert_history_point(const Manager_ptr& manager, std::string name, long long int timestamp = 0);
+            bool _save(std::string path, const std::string& content, bool binary);
+            std::string _load(const std::string& path, Manager_ptr manager);
 
             bool _set_my_docs_dir();
 
@@ -45,19 +48,20 @@ namespace core {
                 return instance;
             }
 
-            bool loadDir(bool my_docs = false);
-            bool loadIntoCurrent(std::string path);
+            void setCompression(bool compress);
+
+            std::string loadIntoCurrent(std::string path);
             bool save(std::string action_name, Manager_ptr manager = nullptr);
 
+            std::vector<File> getCompatibleFiles(std::string path = " ");
+
+            std::string getDocsDir();
+
             bool setWorkDir(const std::string& path);
-            void setMaxHistoryLength(int length);
             void setCurrentManager(Manager_ptr manager);
-
-            void insertManager(const Manager& manager);
-
+            void setManager(const Manager& manager);
 
             Manager_ptr getCurrentManager() { return m_current_manager; }
-            std::map<long long int, HistoryPoint> getManagerHistory() { return m_history; }
         };
     }
 }

@@ -201,7 +201,7 @@ namespace core {
             std::vector<LoanID> to_retire;
             for (auto& loans : m_item_loan_map) {
                 for (auto& loan_id : loans.second) {
-                    retireLoan(loan_id);
+                    retireLoan(loan_id, getCurrentDate());
                 }
             }
             return true;
@@ -213,7 +213,7 @@ namespace core {
             for (auto item_id : m_retired_categories[cat_id]->registered_items) {
                 if (m_item_loan_map.find(item_id) != m_item_loan_map.end()) {
                     for (auto loan_id : m_item_loan_map[item_id]) {
-                        retireLoan(loan_id);
+                        retireLoan(loan_id, getCurrentDate());
                     }
                 }
             }
@@ -315,12 +315,13 @@ namespace core {
             }
         }
 
-        bool Manager::retireLoan(LoanID loan_id) {
+        bool Manager::retireLoan(LoanID loan_id, core::Date date_back) {
             bool ret = exchange_btw_maps<LoanID, Loan_ptr>(m_registered_loans, m_retired_loans, loan_id);
             if (!ret)
                 return false;
 
             Loan_ptr loan = getLoan(loan_id).value();
+            loan->date_back = date_back;
 
             if (m_item_loan_map.find(loan->item) != m_item_loan_map.end()) {
                 m_item_loan_map[loan->item].erase(loan_id);
