@@ -76,6 +76,7 @@ include_directories(vendors/toml11)
 
 add_subdirectory(vendors/TempoApp)
 include_directories(vendors/TempoApp/include)
+include_directories(vendors/TempoApp/external/imgui/imgui)
 
 # ----
 # Zlib

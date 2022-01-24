@@ -1,5 +1,11 @@
 #include "menu_bar.h"
 
 void MenuBar::FrameUpdate() {
-    ImGui::Text("Menu bar");
+    ImGui::BeginMainMenuBar();
+
+    if (ImGui::BeginMenu("Fichiers")) {
+        ImGui::EndMenu();
+    }
+
+    ImGui::EndMainMenuBar();
 }

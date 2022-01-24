@@ -16,7 +16,7 @@
 using namespace core;
 class MainApp : public Tempo::App {
 private:
-    bool m_open = true;
+    bool m_open = false;
 
     Item::Workspace& m_workspace = Item::Workspace::getInstance();
 

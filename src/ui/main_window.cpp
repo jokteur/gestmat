@@ -3,6 +3,8 @@
 #include "style.h"
 #include "core/item_manager.h"
 
+#include "imgui_internal.h"
+
 void MainApp::InitializationBeforeLoop() {
     ui_state->font_regular = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Regular.ttf", 18).value();
     ui_state->font_italic = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Italic.ttf", 18).value();
@@ -34,6 +36,9 @@ void MainApp::FrameUpdate() {
     m_menubar->FrameUpdate();
     m_navbar->FrameUpdate();
 
+    ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 20);
+    ImGui::BeginChild("Panel window");
+
     switch (ui_state->active_panel) {
     case UIState::LOAN:
         m_loans->FrameUpdate();
@@ -45,7 +50,28 @@ void MainApp::FrameUpdate() {
         m_state->FrameUpdate();
         break;
     }
+    if (ImGui::Button("Show demo")) {
+        m_open = true;
+        ui_state->read_only = !ui_state->read_only;
+    }
+
+
+    ImGui::EndChild();
+    ImGui::PopStyleVar();
     ImGui::End();
+    if (m_open)
+        ImGui::ShowDemoWindow(&m_open);
 }
 void MainApp::BeforeFrameUpdate() {
+    switch (ui_state->active_panel) {
+    case UIState::LOAN:
+        m_loans->BeforeFrameUpdate();
+        break;
+    case UIState::MANAGEMENT:
+        m_management->BeforeFrameUpdate();
+        break;
+    case UIState::STATE:
+        m_state->BeforeFrameUpdate();
+        break;
+    }
 }
