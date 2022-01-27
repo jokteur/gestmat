@@ -46,6 +46,28 @@ namespace core {
             copy_map<LoanID, Loan>(other.m_retired_loans, m_retired_loans);
         }
 
+        void Manager::change() {
+            for (auto& pair : m_subscriber_ids) {
+                pair.second = true;
+            }
+        }
+
+        bool Manager::isChanged(int id) {
+            if (!m_subscriber_ids.contains(id)) {
+                m_subscriber_ids[id] = true;
+            }
+            bool ret;
+            ret = m_subscriber_ids[id];
+            m_subscriber_ids[id] = false;
+            return ret;
+        }
+
+        void Manager::giveBackId(int id) {
+            if (m_subscriber_ids.contains(id)) {
+                m_subscriber_ids.erase(id);
+            }
+        }
+
         std::optional<bool> Manager::isRetired(ObjectID id) {
             if (find_in_map<ItemID, Item_ptr>(m_registered_items, (ItemID)id)) {
                 return std::optional<bool>(false);
@@ -168,6 +190,7 @@ namespace core {
                 }
             }
             m_registered_items[(ItemID)item.id] = std::make_shared<Item>(item);
+            change();
             return (ItemID)item.id;
         }
 
@@ -185,11 +208,13 @@ namespace core {
             category.properties = properties;
             category.registered_items.clear();
             m_registered_categories[(CategoryID)category.id] = std::make_shared<Category>(category);
+            change();
             return (CategoryID)category.id;
         }
 
         PropertyID Manager::createProperty(Property property) {
             m_registered_properties[(PropertyID)property.id] = std::make_shared<Property>(property);
+            change();
             return (PropertyID)property.id;
         }
 
@@ -204,6 +229,7 @@ namespace core {
                     retireLoan(loan_id, getCurrentDate());
                 }
             }
+            change();
             return true;
         }
         bool Manager::retireCategory(CategoryID cat_id) {
@@ -217,20 +243,25 @@ namespace core {
                     }
                 }
             }
+            change();
             return true;
         }
         bool Manager::retireProperty(PropertyID prop_id) {
+            change();
             return exchange_btw_maps<PropertyID, Property_ptr>(m_registered_properties, m_retired_properties, prop_id);
         }
 
         // Unretirement
         bool Manager::unretireItem(ItemID item_id) {
+            change();
             return exchange_btw_maps<ItemID, Item_ptr>(m_retired_items, m_registered_items, item_id);
         }
         bool Manager::unretireCategory(CategoryID cat_id) {
+            change();
             return exchange_btw_maps<CategoryID, Category_ptr>(m_retired_categories, m_registered_categories, cat_id);
         }
         bool Manager::unretireProperty(PropertyID prop_id) {
+            change();
             return exchange_btw_maps<PropertyID, Property_ptr>(m_retired_properties, m_registered_properties, prop_id);
         }
 
@@ -246,6 +277,7 @@ namespace core {
                 }
                 m_retired_items.erase(item_id);
                 m_item_loan_map.erase(item_id);
+                change();
                 return true;
             }
             return false;
@@ -257,6 +289,7 @@ namespace core {
                     m_registered_items.erase(item_id);
                 }
                 m_retired_categories.erase(cat_id);
+                change();
                 return true;
             }
             return false;
@@ -274,6 +307,7 @@ namespace core {
                     }
                 }
                 m_retired_properties.erase(prop_id);
+                change();
                 return true;
             }
             return false;
@@ -292,6 +326,7 @@ namespace core {
             }
             m_item_loan_map[item_id].insert(loan.id);
             m_person_loan_map[person_id].insert(loan.id);
+            change();
             return std::optional<LoanID>(loan.id);
         }
 
@@ -299,6 +334,7 @@ namespace core {
             std::optional<Item_ptr> item = getItem(item_id);
             if (item.has_value()) {
                 m_registered_persons[person.id] = std::make_shared<Person>(person);
+                change();
                 return new_loan(item_id, note, date, person.id);
             }
             else {
@@ -308,6 +344,7 @@ namespace core {
         std::optional<LoanID> Manager::newLoan(ItemID item_id, Note note, Date date, PersonID person_id) {
             std::optional<Item_ptr> item = getItem(item_id);
             if (item.has_value()) {
+                change();
                 return new_loan(item_id, note, date, person_id);
             }
             else {
@@ -334,7 +371,7 @@ namespace core {
                 m_person_loan_map.erase(loan->person);
                 exchange_btw_maps<PersonID, Person_ptr>(m_registered_persons, m_retired_persons, loan->person);
             }
-
+            change();
             return true;
         }
     }

@@ -5,7 +5,7 @@
 
 struct UIState {
     bool read_only = false;
-    long long int imID = 1000;
+    long long int imID = 100000000;
 
     // Fonts
     Tempo::FontID font_regular;

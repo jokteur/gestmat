@@ -264,6 +264,9 @@ namespace core {
             bool ret = false;
             ret = _save(_get_dir_path() + "\\" + filename, out_str, m_compression);
             ret &= _save(m_docs_dir + "\\" + filename, out_str, m_compression);
+
+            manager->setChange();
+
             return ret;
         }
 

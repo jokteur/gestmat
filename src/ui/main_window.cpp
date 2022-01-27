@@ -3,6 +3,8 @@
 #include "style.h"
 #include "core/item_manager.h"
 
+#include "ui/widgets/modal.h"
+
 #include "imgui_internal.h"
 
 void MainApp::InitializationBeforeLoop() {
@@ -18,7 +20,11 @@ void MainApp::InitializationBeforeLoop() {
     for (const auto& file : files) {
         last = file;
     }
-    m_workspace.loadIntoCurrent(last.path);
+    // m_workspace.setCompression(false);
+    // std::cout << last.path << std::endl;
+    m_open_error = m_workspace.loadIntoCurrent(last.path);
+    // m_workspace.setCompression(true);
+    // m_workspace.save("save", m_workspace.getCurrentManager());
 }
 
 void MainApp::FrameUpdate() {
@@ -35,6 +41,10 @@ void MainApp::FrameUpdate() {
 
     m_menubar->FrameUpdate();
     m_navbar->FrameUpdate();
+
+    if (!m_open_error.empty()) {
+        ImGui::Text(m_open_error.c_str());
+    }
 
     ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarSize, 20);
     ImGui::BeginChild("Panel window");
@@ -58,6 +68,7 @@ void MainApp::FrameUpdate() {
 
     ImGui::EndChild();
     ImGui::PopStyleVar();
+    Modals::getInstance().FrameUpdate();
     ImGui::End();
     if (m_open)
         ImGui::ShowDemoWindow(&m_open);

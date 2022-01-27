@@ -18,6 +18,8 @@ class MainApp : public Tempo::App {
 private:
     bool m_open = false;
 
+    std::string m_open_error;
+
     Item::Workspace& m_workspace = Item::Workspace::getInstance();
 
     std::shared_ptr<UIState> ui_state = std::make_shared<UIState>();
