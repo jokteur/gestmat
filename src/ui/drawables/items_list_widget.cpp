@@ -19,6 +19,37 @@ void ItemsListWidget::change_id() {
     m_table_id = m_ui_state->imID;
 }
 
+void ItemsListWidget::add_empty_item() {
+    ItemInfos item;
+    item.is_new = true;
+    item.id = m_ui_state->imID;
+    m_ui_state->imID++;
+    m_new_items.push_back(item);
+}
+
+void ItemsListWidget::reset_select_in_new_items() {
+    for (auto& item : m_new_items) {
+        item.select.clear();
+    }
+}
+
+void ItemsListWidget::save() {
+    for (auto& pair : m_items) {
+        auto& items = pair.second;
+        for (auto& item_info : items) {
+            item_info.item->property_values = item_info.values;
+        }
+    }
+    for (auto& item_infos : m_new_items) {
+        Item::Item item;
+        item.category = m_cat_id;
+        item.property_values = item_infos.values;
+        m_manager->createItem(item);
+    }
+    m_new_items.clear();
+    m_workspace.save("nouvel_objet", m_manager);
+}
+
 void ItemsListWidget::fill_items(bool default_sort) {
     m_items.clear();
     if (default_sort) {
@@ -31,12 +62,11 @@ void ItemsListWidget::fill_items(bool default_sort) {
     auto prop_sort_id = m_category->properties[m_sort_col_id];
     for (auto item_id : m_category->registered_items) {
         auto item = m_manager->getItem(item_id).value();
-        if (!item->property_values.contains(prop_sort_id)) {
-        }
 
         ItemInfos infos{
             .item = item,
             .is_new = false,
+            .id = item->id,
         };
         for (auto prop_id : m_category->properties) {
             auto prop = m_manager->getProperty(prop_id).value();
@@ -55,7 +85,7 @@ void ItemsListWidget::fill_items(bool default_sort) {
     m_fill_cols = false;
 }
 
-void ItemsListWidget::show_row(ItemInfos item_info) {
+void ItemsListWidget::show_row(ItemInfos& item_info) {
     ImGui::TableNextRow();
 
     auto& values = item_info.values;
@@ -64,13 +94,26 @@ void ItemsListWidget::show_row(ItemInfos item_info) {
         ImGui::TableSetColumnIndex(column);
         auto prop_id = m_category->properties[column];
         auto prop = m_manager->getProperty(prop_id).value();
+
+        // For new items
+        if (!values.contains(prop_id)) {
+            values[prop_id] = "";
+        }
+
         if (m_edit_mode) {
             ImGui::SetNextItemWidth(-FLT_MIN);
-            std::string label = labelize(prop_id, "input", item_info.item->id);
+            std::string label = labelize(prop_id, "input", item_info.id);
             if (prop->select.empty())
                 ImGui::InputText(label.c_str(), &values[prop_id]);
             else {
+                // New items may have been created, or a new property with
+                // select may have appeared
+                if (!item_info.select.contains(prop_id)) {
+                    item_info.select[prop_id] = std::make_shared<Combo>(m_ui_state, prop->select, "", true);
+                }
                 item_info.select[prop_id]->FrameUpdate();
+                // Could be a better way than retrieving all infos
+                item_info.values[prop_id] = item_info.select[prop_id]->getValue();
             }
         }
         else
@@ -90,10 +133,12 @@ void ItemsListWidget::FrameUpdate() {
     if (m_edit_mode) {
         if (button(labelize(m_cat_id, "Annuler##edit_mode"), m_ui_state)) {
             m_edit_mode = false;
+            m_new_items.clear();
         }
         ImGui::SameLine();
         if (button(labelize(m_cat_id, "Sauvegarder##edit_mode"), m_ui_state)) {
             m_edit_mode = false;
+            save();
         }
     }
     else {
@@ -101,6 +146,17 @@ void ItemsListWidget::FrameUpdate() {
             m_edit_mode = true;
             m_sort_col_id = 0;
             m_fill_cols = true;
+        }
+    }
+
+    if (m_edit_mode) {
+        if (button(labelize(m_cat_id, "+").c_str(), m_ui_state)) {
+            add_empty_item();
+        }
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("Ajouter un nouvel objet");
+            ImGui::EndTooltip();
         }
     }
 
@@ -116,6 +172,7 @@ void ItemsListWidget::FrameUpdate() {
 
     if (!m_edit_mode) {
         flags |= ImGuiTableFlags_Sortable;
+        m_new_items.clear();
     }
 
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2());
@@ -150,23 +207,30 @@ void ItemsListWidget::FrameUpdate() {
             }
         }
 
+        if (m_edit_mode) {
+            for (auto& item_info : m_new_items) {
+                show_row(item_info);
+            }
+        }
+
         // Rows of items
         if (m_manager->isChanged(m_sub_id)) {
             fill_items(true);
-            // change_id();
+            // The select may have change in between
+            reset_select_in_new_items();
         }
         else if (m_fill_cols) {
             fill_items();
         }
         if (m_ascending || m_edit_mode) {
             for (auto& row : m_items) {
-                for (auto item_info : row.second)
+                for (auto& item_info : row.second)
                     show_row(item_info);
             }
         }
         else {
             for (auto it = m_items.rbegin();it != m_items.rend();it++) {
-                for (auto item_info : it->second)
+                for (auto& item_info : it->second)
                     show_row(item_info);
             }
         }

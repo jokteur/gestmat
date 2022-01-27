@@ -10,6 +10,7 @@ using namespace core;
 struct ItemInfos {
     Item::Item_ptr item;
     bool is_new = false;
+    Item::ItemID id;
     std::map<Item::PropertyID, std::string> values;
     std::map<Item::PropertyID, std::shared_ptr<Combo>> select;
 };
@@ -37,12 +38,17 @@ private:
     std::map<Item::PropertyID, Item::Property_ptr> m_properties;
 
     std::map<std::string, std::vector<ItemInfos>> m_items;
+    std::vector<ItemInfos> m_new_items;
+
+    void add_empty_item();
+
+    void reset_select_in_new_items();
 
     void fill_items(bool default_sort = false);
 
     void change_id();
 
-    void show_row(ItemInfos item_info);
+    void show_row(ItemInfos& item_info);
 
     void save();
 public:

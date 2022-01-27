@@ -190,6 +190,7 @@ namespace core {
                 }
             }
             m_registered_items[(ItemID)item.id] = std::make_shared<Item>(item);
+            cat->registered_items.insert(item.id);
             change();
             return (ItemID)item.id;
         }
