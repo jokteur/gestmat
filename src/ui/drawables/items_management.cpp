@@ -23,6 +23,11 @@ void ItemsManagement::BeforeFrameUpdate() {
             pair.second->BeforeFrameUpdate();
         }
     }
+    for (auto& pair : m_items_widgets) {
+        if (pair.second != nullptr) {
+            pair.second->BeforeFrameUpdate();
+        }
+    }
 }
 
 void ItemsManagement::show_cat(Item::CategoryID cat_id, Item::Category_ptr cat) {

@@ -16,6 +16,7 @@ namespace core {
     namespace Item {
         using namespace nlohmann;
         typedef long long int ObjectID;
+        typedef ObjectID NoteID;
         typedef ObjectID ItemID;
         typedef ObjectID CategoryID;
         typedef ObjectID PropertyID;

@@ -63,3 +63,16 @@ void help(std::string content) {
         ImGui::EndTooltip();
     }
 }
+
+std::string format_CET(std::chrono::system_clock::time_point tp) {
+    using namespace std::chrono;
+    static auto const CET = locate_zone("Etc/GMT-1");
+    return std::format("{:%F à %Hh%M}", zoned_time{ CET, floor<milliseconds>(tp) });
+}
+
+void timestampToText(long long int timestamp) {
+    std::chrono::seconds time(timestamp);
+    std::chrono::time_point<std::chrono::system_clock> dt(time);
+    std::string text = format_CET(dt);
+    ImGui::Text(text.c_str());
+}

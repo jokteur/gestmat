@@ -39,10 +39,26 @@ private:
 
     std::map<std::string, std::vector<ItemInfos>> m_items;
     std::vector<ItemInfos> m_new_items;
+    std::vector<ItemInfos> m_to_remove;
+
+    std::string m_note;
+    bool m_new_note = false;
+
+    void save();
+
+    void notes(ItemInfos& item_info);
 
     void add_empty_item();
 
     void reset_select_in_new_items();
+
+    void remove_new_item(ItemInfos& item_info);
+
+    void delete_item(ItemInfos& item_info);
+
+    void retire_item(ItemInfos& item_info);
+
+    void unretire_item(ItemInfos& item_info);
 
     void fill_items(bool default_sort = false);
 
@@ -50,7 +66,6 @@ private:
 
     void show_row(ItemInfos& item_info);
 
-    void save();
 public:
     ItemsListWidget(UIState_ptr ui_state, Item::CategoryID cat_id = -1);
     void FrameUpdate() override;
