@@ -41,6 +41,9 @@ CategoryWidget::CategoryWidget(UIState_ptr ui_state, Item::CategoryID cat_id) : 
         for (auto prop_id : m_current_properties_order) {
             m_current_properties.insert(prop_id);
         }
+        for (auto prop_id : m_category->properties_hide) {
+            m_properties_hide[prop_id] = true;
+        }
     }
 }
 
@@ -48,6 +51,11 @@ void CategoryWidget::save() {
     if (m_category != nullptr) {
         m_category->name = m_name;
         m_category->properties = m_current_properties_order;
+        m_category->properties_hide.clear();
+        for (auto pair : m_properties_hide.get()) {
+            if (pair.second)
+                m_category->properties_hide.insert(pair.first);
+        }
         m_workspace.save("editer_categorie", m_manager);
     }
     else {
@@ -55,9 +63,15 @@ void CategoryWidget::save() {
             .name = m_name,
             .properties = m_current_properties_order,
         };
+        category.properties_hide.clear();
+        for (auto pair : m_properties_hide.get()) {
+            if (pair.second)
+                category.properties_hide.insert(pair.first);
+        }
         m_manager->createCategory(category);
         m_workspace.save("nouvelle_categorie", m_manager);
     }
+    m_properties_hide.clear();
     m_destroy = true;
 }
 
@@ -84,6 +98,7 @@ void CategoryWidget::PropertiesWidget() {
             auto prop = m_manager->getProperty(prop_id).value();
 
             float button_size = ImGui::CalcTextSize(">>>").x + ImGui::GetStyle().FramePadding.x * 3;
+            float checkbox_size = ImGui::CalcTextSize("Cacher (?)").x + ImGui::GetStyle().FramePadding.x * 5;
 
             ImVec2 frame_padding = ImGui::GetStyle().FramePadding;
             ImVec2 text_size = ImGui::CalcTextSize(prop->name.c_str());
@@ -91,7 +106,7 @@ void CategoryWidget::PropertiesWidget() {
                 prop->name.c_str(),
                 false,
                 ImGuiSelectableFlags_DrawHoveredWhenHeld,
-                ImVec2(ImGui::GetColumnWidth() - button_size - 10, frame_padding.y * 2 + text_size.y)
+                ImVec2(ImGui::GetColumnWidth() - button_size - 10 - checkbox_size, frame_padding.y * 2 + text_size.y)
             );
             if (ImGui::IsItemActive() && !ImGui::IsItemHovered()) {
                 int n_next = n + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
@@ -103,8 +118,15 @@ void CategoryWidget::PropertiesWidget() {
                 }
             }
             ImGui::SameLine();
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetColumnWidth() - button_size - checkbox_size);
 
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetColumnWidth() - button_size);
+            ImGui::Checkbox(labelize(m_cat_id, "Cacher", prop_id).c_str(), &m_properties_hide[prop_id]);
+            ImGui::SameLine();
+            help("Si l'option est sélectionnée, la propriété ne sera pas affichée lors d'emprunts.\n"
+                "Elle sera uniquement affichée dans la gestion matériel.\n"
+            );
+            ImGui::SameLine();
+
             if (button(labelize(m_cat_id, ">>>", prop_id), m_ui_state)) {
                 to_remove.insert(n);
                 m_current_properties.erase(prop_id);

@@ -70,6 +70,7 @@ namespace core {
             std::string name;
             std::vector<PropertyID> properties;
             std::set<ItemID> registered_items;
+            std::set<PropertyID> properties_hide;
         };
         struct Item : public Base {
             CategoryID category = -1;

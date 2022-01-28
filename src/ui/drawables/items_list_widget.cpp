@@ -386,8 +386,12 @@ void ItemsListWidget::FrameUpdate() {
             if (i == 1) {
                 col_flags |= ImGuiTableColumnFlags_DefaultSort;
             }
+            std::string name = m_properties[prop_id]->name;
+            if (m_category->properties_hide.contains(prop_id)) {
+                name += "*";
+            }
             ImGui::TableSetupColumn(
-                labelize(m_cat_id, m_properties[prop_id]->name).c_str(), col_flags);
+                labelize(m_cat_id, name).c_str(), col_flags);
             i++;
         }
         ImGui::TableSetupScrollFreeze(0, 1);

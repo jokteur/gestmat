@@ -42,7 +42,7 @@ namespace core {
 
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Property, name, mandatory, no_edit, select, id);
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Note, content, timestamp, id);
-        NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Category, name, properties, registered_items, id);
+        NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Category, name, properties, registered_items, properties_hide, id);
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Loan, note, date, person, remainder_date, id);
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Person, name, surname, place, notes, birthday, id);
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Item, category, notes, property_values, id);
