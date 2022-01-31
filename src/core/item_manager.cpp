@@ -308,6 +308,18 @@ namespace core {
                     }
                 }
                 m_retired_properties.erase(prop_id);
+                for (auto item_pair : m_retired_items) {
+                    auto item = item_pair.second;
+                    if (item->property_values.contains(prop_id)) {
+                        item->property_values.erase(prop_id);
+                    }
+                }
+                for (auto item_pair : m_registered_items) {
+                    auto item = item_pair.second;
+                    if (item->property_values.contains(prop_id)) {
+                        item->property_values.erase(prop_id);
+                    }
+                }
                 change();
                 return true;
             }

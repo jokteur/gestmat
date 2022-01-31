@@ -14,7 +14,8 @@ void NavBar::FrameUpdate() {
         ImGui::EndTabItem();
     }
     if (ImGui::BeginTabItem("Gestion matériel")) {
-        m_ui_state->active_panel = UIState::MANAGEMENT;
+        if (m_ui_state->active_panel != UIState::PROPERTIES)
+            m_ui_state->active_panel = UIState::MANAGEMENT;
         ImGui::EndTabItem();
     }
     ImGui::EndTabBar();

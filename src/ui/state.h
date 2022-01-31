@@ -14,7 +14,7 @@ struct UIState {
     Tempo::FontID font_title;
 
     // Nav bar
-    enum Panel { LOAN, MANAGEMENT, STATE };
+    enum Panel { LOAN, MANAGEMENT, STATE, PROPERTIES };
     Panel active_panel = LOAN;
 };
 typedef std::shared_ptr<UIState> UIState_ptr;

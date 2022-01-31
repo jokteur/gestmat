@@ -6,8 +6,8 @@ void title(std::string title, UIState_ptr ui_state) {
     Tempo::PopFont();
 }
 
-bool button(std::string name, UIState_ptr ui_state, std::string deactivated_msg, ImVec4 color, ImVec2 size) {
-    bool is_deactivated = ui_state->read_only || !deactivated_msg.empty();
+bool button(std::string name, UIState_ptr ui_state, std::string deactivated_msg, ImVec4 color, bool ignore_deactivated, ImVec2 size) {
+    bool is_deactivated = (ui_state->read_only || !deactivated_msg.empty()) && !ignore_deactivated;
     bool colored = color.w != 0.f && color.x != 0.f && color.y != 0.f && color.z != 0.f;
     if (colored) {
         ImGui::PushStyleColor(ImGuiCol_Button, color);

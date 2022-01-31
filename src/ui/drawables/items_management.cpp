@@ -147,7 +147,6 @@ void ItemsManagement::show_cat(Item::CategoryID cat_id, Item::Category_ptr cat) 
 
 void ItemsManagement::FrameUpdate() {
     m_manager = m_workspace.getCurrentManager();
-
     title("Catégories d'objets", m_ui_state);
     ImGui::SameLine();
     if (button("+##new_cat", m_ui_state)) {
@@ -155,14 +154,13 @@ void ItemsManagement::FrameUpdate() {
         m_cat_widgets[-1] = std::make_shared<CategoryWidget>(m_ui_state);
     }
     ImGui::SameLine();
-    if (button("Propriétés##prop_edit", m_ui_state)) {
-
+    if (button("Propriétés##edit_props_button", m_ui_state, "", ImVec4(), true)) {
+        m_ui_state->active_panel = UIState::PROPERTIES;
     }
 
     if (m_cat_widgets.contains(-1)) {
         m_cat_widgets[-1]->FrameUpdate();
     }
-
 
     for (auto cat_id : m_manager->getAllCategories()) {
         auto cat = m_manager->getCategory(cat_id).value();

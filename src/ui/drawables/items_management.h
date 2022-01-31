@@ -5,6 +5,7 @@
 
 #include "category_widget.h"
 #include "items_list_widget.h"
+#include "properties_widget.h"
 
 class ItemsManagement : public Drawable {
 private:

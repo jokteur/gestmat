@@ -53,6 +53,9 @@ void MainApp::FrameUpdate() {
     case UIState::LOAN:
         m_loans->FrameUpdate();
         break;
+    case UIState::PROPERTIES:
+        m_properties->FrameUpdate();
+        break;
     case UIState::MANAGEMENT:
         m_management->FrameUpdate();
         break;
@@ -77,6 +80,9 @@ void MainApp::BeforeFrameUpdate() {
     switch (ui_state->active_panel) {
     case UIState::LOAN:
         m_loans->BeforeFrameUpdate();
+        break;
+    case UIState::PROPERTIES:
+        m_properties->BeforeFrameUpdate();
         break;
     case UIState::MANAGEMENT:
         m_management->BeforeFrameUpdate();

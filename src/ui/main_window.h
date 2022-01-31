@@ -9,6 +9,7 @@
 #include "drawables/items_management.h"
 #include "drawables/items_loan.h"
 #include "drawables/items_state.h"
+#include "drawables/properties_widget.h"
 #include "drawables/nav_bar.h"
 
 // Drawable and widgets
@@ -30,6 +31,7 @@ private:
     std::shared_ptr<NavBar> m_navbar = std::make_shared<NavBar>(ui_state);
     std::shared_ptr<ItemsLoans> m_loans = std::make_shared<ItemsLoans>(ui_state);
     std::shared_ptr<ItemsManagement> m_management = std::make_shared<ItemsManagement>(ui_state);
+    std::shared_ptr<PropertiesWidget> m_properties = std::make_shared<PropertiesWidget>(ui_state);
     std::shared_ptr<ItemsState> m_state = std::make_shared<ItemsState>(ui_state);
 
 public:

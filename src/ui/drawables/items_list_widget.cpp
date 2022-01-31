@@ -332,6 +332,7 @@ void ItemsListWidget::FrameUpdate() {
     }
 
     if (m_edit_mode) {
+        ImGui::SameLine();
         if (button(labelize(m_cat_id, "+").c_str(), m_ui_state)) {
             add_empty_item();
         }
@@ -440,8 +441,10 @@ void ItemsListWidget::FrameUpdate() {
     }
     ImGui::PopStyleVar(3);
     ImGui::PopStyleColor();
+    ImGui::Spacing();
 }
 void ItemsListWidget::BeforeFrameUpdate() {
+    m_manager = m_workspace.getCurrentManager();
     for (auto& item_info : m_to_remove) {
         remove_new_item(item_info);
     }
