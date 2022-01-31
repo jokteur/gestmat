@@ -32,7 +32,7 @@ private:
     int m_sort_col_id = 0;
     bool m_ascending = true;
 
-    int m_sub_id;
+    long long int m_sub_id;
     long long int m_table_id;
 
     std::map<Item::PropertyID, Item::Property_ptr> m_properties;

@@ -110,8 +110,8 @@ namespace core {
         private:
             bool m_changed = false;
 
-            std::map<int, bool> m_subscriber_ids;
-            int m_subscriber_counter = 0;
+            std::map<long long int, bool> m_subscriber_ids;
+            long long int m_subscriber_counter = 0;
 
             std::map<ItemID, std::set<LoanID>> m_item_loan_map;
             std::map<PersonID, std::set<LoanID>> m_person_loan_map;
@@ -155,12 +155,12 @@ namespace core {
              * @return true
              * @return false
              */
-            bool isChanged(int id);
+            bool isChanged(long long int id);
 
             void setChange() { change(); }
 
-            int getId() { m_subscriber_counter++; return m_subscriber_counter; }
-            void giveBackId(int id);
+            long long int getId() { m_subscriber_counter++; return m_subscriber_counter; }
+            void giveBackId(long long int id);
 
             // Returns all categories, retired or not
             std::set<CategoryID> getAllCategories();

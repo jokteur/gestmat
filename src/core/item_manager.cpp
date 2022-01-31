@@ -52,7 +52,7 @@ namespace core {
             }
         }
 
-        bool Manager::isChanged(int id) {
+        bool Manager::isChanged(long long int id) {
             if (!m_subscriber_ids.contains(id)) {
                 m_subscriber_ids[id] = true;
             }
@@ -62,7 +62,7 @@ namespace core {
             return ret;
         }
 
-        void Manager::giveBackId(int id) {
+        void Manager::giveBackId(long long int id) {
             if (m_subscriber_ids.contains(id)) {
                 m_subscriber_ids.erase(id);
             }

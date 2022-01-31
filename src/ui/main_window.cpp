@@ -62,11 +62,14 @@ void MainApp::FrameUpdate() {
     case UIState::STATE:
         m_state->FrameUpdate();
         break;
+    case UIState::ALERTES:
+        m_alerts->FrameUpdate();
+        break;
     }
-    if (ImGui::Button("Show demo")) {
-        m_open = true;
-        ui_state->read_only = !ui_state->read_only;
-    }
+    // if (ImGui::Button("Show demo")) {
+    //     m_open = true;
+    //     ui_state->read_only = !ui_state->read_only;
+    // }
 
 
     ImGui::EndChild();
@@ -89,6 +92,9 @@ void MainApp::BeforeFrameUpdate() {
         break;
     case UIState::STATE:
         m_state->BeforeFrameUpdate();
+        break;
+    case UIState::ALERTES:
+        m_alerts->BeforeFrameUpdate();
         break;
     }
 }
