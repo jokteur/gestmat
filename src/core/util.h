@@ -49,4 +49,6 @@ namespace core {
     };
 
     Date getCurrentDate();
+
+    std::string toLower(const std::string& str);
 }

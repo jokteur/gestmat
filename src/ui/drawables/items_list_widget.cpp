@@ -358,13 +358,13 @@ void ItemsListWidget::FrameUpdate() {
         m_new_items.clear();
     }
 
-    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 2));
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 2));
     ImGui::PushStyleColor(ImGuiCol_FrameBg, 0);
 
     if (m_edit_mode) {
-        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 2));
+        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
     }
     const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeight();
@@ -380,7 +380,7 @@ void ItemsListWidget::FrameUpdate() {
         ImGui::TableSetupColumn(
             labelize(m_cat_id, "Actions").c_str(),
             ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort,
-            35.f);
+            135.f);
 
         for (auto prop_id : m_category->properties) {
             int col_flags = 0;

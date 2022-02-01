@@ -8,7 +8,8 @@ void ItemsState::BeforeFrameUpdate() {
 }
 
 
-ItemsState::ItemsState(UIState_ptr ui_state) : Drawable(ui_state) {
+ItemsState::ItemsState(UIState_ptr ui_state) :
+    Drawable(ui_state), m_filter(ui_state, "Rechercher (nom, prénom, date, infos objet, chambre, ...)") {
 }
 
 void ItemsState::fill_items() {
@@ -19,33 +20,51 @@ void ItemsState::fill_items() {
         auto cat = m_manager->getCategory(item->category).value();
         auto person = m_manager->getPerson(loan->person).value();
 
+        Filter filter;
+        filter.insert(core::toLower(person->name));
+        filter.insert(core::toLower(person->surname));
+        filter.insert(core::toLower(person->place));
+        filter.insert(core::toLower(person->birthday.format("%Y/%m/%d")));
+        filter.insert(core::toLower(loan->date.format("%Y/%m/%d")));
+        filter.insert(core::toLower(cat->name));
+        for (auto pair : item->property_values) {
+            if (cat->properties_hide.contains(pair.first)) {
+                continue;
+            }
+            filter.insert(core::toLower(pair.second));
+        }
+
+        auto make_pair = [=](Item::Loan_ptr loa) {
+            return std::make_pair(filter, loa);
+        };
+
         std::string key = person->surname + person->name;
         if (m_sort_id == TYPE) {
-            m_loans[cat->name][key].push_back(loan);
+            m_loans[cat->name][key].push_back(make_pair(loan));
         }
         else if (m_sort_id == SURNAME) {
-            m_loans[person->surname][key].push_back(loan);
+            m_loans[person->surname][key].push_back(make_pair(loan));
         }
         else if (m_sort_id == NAME) {
-            m_loans[person->name][key].push_back(loan);
+            m_loans[person->name][key].push_back(make_pair(loan));
         }
         else if (m_sort_id == BIRTHDAY) {
-            m_loans[person->birthday.format("%Y/%m/%d")][key].push_back(loan);
+            m_loans[person->birthday.format("%Y/%m/%d")][key].push_back(make_pair(loan));
         }
         else if (m_sort_id == PLACE) {
-            m_loans[person->place][key].push_back(loan);
+            m_loans[person->place][key].push_back(make_pair(loan));
         }
         else {
-            m_loans[loan->date.format("%Y/%m/%d")][key].push_back(loan);
+            m_loans[loan->date.format("%Y/%m/%d")][key].push_back(make_pair(loan));
         }
     }
 }
 
 
-void ItemsState::show_row(std::vector<Item::Loan_ptr> loans) {
+void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) {
     ImGui::TableNextRow();
 
-    auto person = m_manager->getPerson(loans[0]->person).value();
+    auto person = m_manager->getPerson(loans[0].second->person).value();
 
     ImGui::TableSetColumnIndex(SURNAME);
     ImGui::Text(person->surname.c_str());
@@ -88,7 +107,10 @@ void ItemsState::show_row(std::vector<Item::Loan_ptr> loans) {
     // }
     int i = 0;
     Tempo::PushFont(m_ui_state->font_bold);
-    for (auto loan : loans) {
+    for (auto loan_pair : loans) {
+        if (!m_filter.PassFilter(loan_pair.first))
+            continue;
+        auto loan = loan_pair.second;
         ImGui::TableSetColumnIndex(LOAN_DATE);
         if (!i)
             ImGui::Text("");
@@ -97,7 +119,11 @@ void ItemsState::show_row(std::vector<Item::Loan_ptr> loans) {
     }
     Tempo::PopFont();
     i = 0;
-    for (auto loan : loans) {
+    for (auto loan_pair : loans) {
+        if (!m_filter.PassFilter(loan_pair.first))
+            continue;
+
+        auto loan = loan_pair.second;
         Item::Item_ptr item = m_manager->getItem(loan->item).value();
         Item::Category_ptr cat = m_manager->getCategory(item->category).value();
 
@@ -132,6 +158,8 @@ void ItemsState::FrameUpdate() {
     }
     title("Emprunts en cours", m_ui_state);
 
+    m_filter.FrameUpdate();
+
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5, 5));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 2));
@@ -145,12 +173,7 @@ void ItemsState::FrameUpdate() {
     if (ImGui::BeginTable(
         "##items_loan_table",
         8, flags
-        // ImVec2(0.f, TEXT_BASE_HEIGHT * (float)num_rows)
     )) {
-        // ImGui::TableSetupColumn(
-        //     "Actions",
-        //     ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort,
-        //     40.f);
         ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
 
         ImGui::TableSetupColumn("Nom");
@@ -177,14 +200,32 @@ void ItemsState::FrameUpdate() {
 
         if (m_ascending) {
             for (auto first_sort : m_loans) {
-                for (auto second_sort : first_sort.second)
-                    show_row(second_sort.second);
+                for (auto second_sort : first_sort.second) {
+                    bool draw = false;
+                    for (auto pair : second_sort.second) {
+                        if (m_filter.PassFilter(pair.first)) {
+                            draw = true;
+                            break;
+                        }
+                    }
+                    if (draw)
+                        show_row(second_sort.second);
+                }
             }
         }
         else {
             for (auto it = m_loans.rbegin();it != m_loans.rend();it++) {
-                for (auto second_sort : it->second)
-                    show_row(second_sort.second);
+                for (auto second_sort : it->second) {
+                    bool draw = false;
+                    for (auto pair : second_sort.second) {
+                        if (m_filter.PassFilter(pair.first)) {
+                            draw = true;
+                            break;
+                        }
+                    }
+                    if (draw)
+                        show_row(second_sort.second);
+                }
             }
         }
         ImGui::EndTable();

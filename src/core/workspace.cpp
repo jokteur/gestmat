@@ -60,7 +60,7 @@ namespace core {
             }
 
             PyGILState_Release(state);
-            return true;;
+            return true;
         }
 
         std::string Workspace::_get_dir_path() {

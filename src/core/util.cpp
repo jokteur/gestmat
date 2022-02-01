@@ -1,6 +1,7 @@
 #include "util.h"
 
 #include <chrono>
+#include "python/py_api.h"
 
 #pragma warning(disable : 4996) //_CRT_SECURE_NO_WARNINGS
 
@@ -92,4 +93,23 @@ bool core::verifyDate(uint8_t day, uint8_t month, uint16_t year) {
             return false;
     }
     return true;
+}
+
+namespace py = pybind11;
+
+std::string core::toLower(const std::string& str) {
+    std::string new_str;
+    auto state = PyGILState_Ensure();
+    try {
+        auto script = py::module::import("python.scripts.util");
+        new_str = script.attr("lowerWithAccents")(str).cast<std::string>();
+    }
+    catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        PyGILState_Release(state);
+        return str;
+    }
+
+    PyGILState_Release(state);
+    return new_str;
 }
