@@ -225,10 +225,11 @@ namespace core {
                 return false;
 
             std::vector<LoanID> to_retire;
-            for (auto& loans : m_item_loan_map) {
-                for (auto& loan_id : loans.second) {
-                    retireLoan(loan_id, getCurrentDate());
-                }
+            for (auto loan_id : m_item_loan_map[item_id]) {
+                to_retire.push_back(loan_id);
+            }
+            for (auto loan_id : to_retire) {
+                retireLoan(loan_id, getCurrentDate());
             }
             change();
             return true;
