@@ -4,30 +4,10 @@
 #include <memory>
 #include <map>
 
+#include "core/util.h"
+
 using namespace core;
 
-class CheckBoxMap {
-private:
-    std::map<Item::PropertyID, bool> map;
-public:
-    CheckBoxMap() {}
-
-    bool& operator[](Item::PropertyID prop_id) {
-        if (!map.contains(prop_id)) {
-            map[prop_id] = false;
-        }
-        return map[prop_id];
-    }
-
-    std::map<Item::PropertyID, bool> get() {
-        return map;
-    }
-
-    void clear() {
-        map.clear();
-    }
-
-};
 
 class CategoryWidget : public Drawable {
 private:
@@ -40,7 +20,7 @@ private:
     Item::Manager_ptr m_manager;
     Item::Category_ptr m_category = nullptr;
 
-    CheckBoxMap m_properties_hide;
+    CheckBoxMap<Item::PropertyID> m_properties_hide;
 
     bool m_destroy = false;
     std::set<Item::PropertyID> m_current_properties;

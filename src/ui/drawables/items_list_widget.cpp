@@ -30,7 +30,7 @@ void ItemsListWidget::save() {
         m_manager->createItem(item);
     }
     m_new_items.clear();
-    m_workspace.save("nouvel_objet", m_manager);
+    m_workspace.save("edition_objets", m_manager);
 }
 
 void ItemsListWidget::change_id() {

@@ -51,4 +51,34 @@ namespace core {
     Date getCurrentDate();
 
     std::string toLower(const std::string& str);
+
+    template<typename T>
+    class CheckBoxMap {
+    private:
+        std::map<T, bool> map;
+    public:
+        CheckBoxMap() {}
+
+        bool& operator[](T prop_id) {
+            if (!map.contains(prop_id)) {
+                map[prop_id] = false;
+            }
+            return map[prop_id];
+        }
+
+        std::map<T, bool>::iterator begin() {
+            return map.begin();
+        }
+        std::map<T, bool>::iterator end() {
+            return map.end();
+        }
+
+        std::map<T, bool> get() {
+            return map;
+        }
+
+        void clear() {
+            map.clear();
+        }
+    };
 }

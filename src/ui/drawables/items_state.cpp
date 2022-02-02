@@ -86,31 +86,18 @@ void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) 
         ImGui::Text(note.content.c_str());
     }
 
-    // for (auto loan : loans) {
-    //     Item::Item_ptr item = m_manager->getItem(loan->item).value();
-    //     Item::Category_ptr cat = m_manager->getCategory(item->category).value();
+    // Recalculate filter
+    std::map<Item::Loan_ptr, bool> pass_filter;
+    for (auto loan_pair : loans) {
+        pass_filter[loan_pair.second] = m_filter.PassFilter(loan_pair.first);
+    }
 
-        // ImGui::TableSetColumnIndex(ACTIONS);
-        // button(labelize(loan->id, "Actions"), m_ui_state);
-        // if (ImGui::BeginPopupContextItem(0, ImGuiPopupFlags_MouseButtonLeft)) {
-        //     if (button(labelize(loan->id, "Rendre objet"), m_ui_state)) {
-
-        //     }
-        //     if (button(labelize(loan->id, "Éditer patient"), m_ui_state)) {
-
-        //     }
-        //     if (button(labelize(loan->id, "Rendre tous les objets"), m_ui_state)) {
-
-        //     }
-        //     ImGui::EndPopup();
-        // }
-    // }
     int i = 0;
     Tempo::PushFont(m_ui_state->font_bold);
     for (auto loan_pair : loans) {
-        if (!m_filter.PassFilter(loan_pair.first))
-            continue;
         auto loan = loan_pair.second;
+        if (!pass_filter[loan])
+            continue;
         ImGui::TableSetColumnIndex(LOAN_DATE);
         if (!i)
             ImGui::Text("");
@@ -119,17 +106,19 @@ void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) 
     }
     Tempo::PopFont();
     i = 0;
+
+    ImGui::TableSetColumnIndex(TYPE);
     for (auto loan_pair : loans) {
-        if (!m_filter.PassFilter(loan_pair.first))
+        auto loan = loan_pair.second;
+        if (!pass_filter[loan])
             continue;
 
-        auto loan = loan_pair.second;
         Item::Item_ptr item = m_manager->getItem(loan->item).value();
         Item::Category_ptr cat = m_manager->getCategory(item->category).value();
 
-        ImGui::TableSetColumnIndex(TYPE);
         if (!i)
             ImGui::Text("");
+        // Infos box for items
         ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 0.7f), "(infos) ");
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
@@ -146,9 +135,30 @@ void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) 
             ImGui::EndTooltip();
         }
         ImGui::SameLine();
-        ImGui::Text(cat->name.c_str());
+        // 
+        ImGui::Selectable(labelize(loan->id, cat->name, cat->id).c_str(), &m_loans_checkbox[loan->id]);
         i++;
     }
+    ImGui::TableSetColumnIndex(ACTIONS);
+    i = 0;
+    for (auto loan_pair : loans) {
+        auto loan = loan_pair.second;
+        if (!pass_filter[loan])
+            continue;
+        if (!i)
+            ImGui::Text("");
+        ImGui::Checkbox(labelize(loan->id, "##checkbox").c_str(), &m_loans_checkbox[loan->id]);
+        i++;
+    }
+}
+
+void ItemsState::give_back() {
+    for (auto pair : m_loans_checkbox) {
+        if (pair.second) {
+            m_manager->retireLoan(pair.first, getCurrentDate());
+        }
+    }
+    m_workspace.save("rendre_objet");
 }
 
 void ItemsState::FrameUpdate() {
@@ -159,6 +169,13 @@ void ItemsState::FrameUpdate() {
     title("Emprunts en cours", m_ui_state);
 
     m_filter.FrameUpdate();
+
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Actions:");
+    ImGui::SameLine();
+    if (button("Rendre les objects sélectionnés", m_ui_state)) {
+        give_back();
+    }
 
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5, 5));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
@@ -183,6 +200,7 @@ void ItemsState::FrameUpdate() {
         ImGui::TableSetupColumn("Remarque(s)", ImGuiTableColumnFlags_NoSort);
         ImGui::TableSetupColumn("Date d'emprunt", ImGuiTableColumnFlags_DefaultSort);
         ImGui::TableSetupColumn("Objet(s)");
+        ImGui::TableSetupColumn(" ", ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed, 35.f);
         ImGui::TableHeadersRow();
 
         if (ImGuiTableSortSpecs* sorts_specs = ImGui::TableGetSortSpecs()) {
