@@ -73,7 +73,7 @@ void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) 
     ImGui::Text(person->name.c_str());
 
     ImGui::TableSetColumnIndex(BIRTHDAY);
-    ImGui::Text(person->birthday.format("%Y/%m/%d").c_str());
+    ImGui::Text(person->birthday.format("%d/%m/%Y").c_str());
 
     ImGui::TableSetColumnIndex(PLACE);
     ImGui::Text(person->place.c_str());
@@ -101,7 +101,7 @@ void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) 
         ImGui::TableSetColumnIndex(LOAN_DATE);
         if (!i)
             ImGui::Text("");
-        ImGui::Text(loan->date.format("%Y/%m/%d").c_str());
+        ImGui::Text(loan->date.format("%d/%m/%Y").c_str());
         i++;
     }
     Tempo::PopFont();
