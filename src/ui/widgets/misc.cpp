@@ -39,9 +39,11 @@ bool button(std::string name, UIState_ptr ui_state, std::string deactivated_msg,
     return ret & !is_deactivated;
 }
 void labeledTextInput(std::string* content, const std::string& label, const std::string& imId, const std::string& hint, const std::string& error, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data) {
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text(label.c_str());
-    ImGui::SameLine();
+    if (!label.empty()) {
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text(label.c_str());
+        ImGui::SameLine();
+    }
     if (!error.empty()) {
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(125, 0, 0, 79));
     }

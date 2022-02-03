@@ -1,60 +1,150 @@
 #include "date.h"
 
-#include "../imgui_util.h"
+#include "ui/imgui_util.h"
+#include "misc.h"
 #include "imgui_stdlib.h"
+#include "imgui_internal.h"
+
+#include <cctype>
 
 DateWidget::DateWidget(UIState_ptr ui_state) : Drawable(ui_state) {
     m_id = ui_state->imID;
     ui_state->imID++;
+    m_day.reserve(2);
+    m_month.reserve(2);
+    m_year.reserve(4);
 }
 
 void DateWidget::reset() {
     m_id = m_ui_state->imID;
     m_ui_state->imID++;
-    m_focus = DAY;
-    m_day = "";
-    m_month = "";
-    m_year = "";
+    m_focus = NONE;
+    m_day.clear();
+    m_month.clear();
+    m_year.clear();
+    m_day.reserve(2);
+    m_month.reserve(2);
+    m_year.reserve(4);
 }
 
 void DateWidget::setFocus() {
-    if (!ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
-        ImGui::SetKeyboardFocusHere(0);
+    if (m_change_focus)
+        ImGui::SetKeyboardFocusHere();
+    m_change_focus = false;
+}
+
+void DateWidget::BeforeFrameUpdate() {
+}
+
+int FilterInput(ImGuiInputTextCallbackData* data) {
+    auto widget = static_cast<DateWidget*>(data->UserData);
+
+    if (data->EventFlag == ImGuiInputTextFlags_CallbackEdit) {
+        if (widget->m_current_focus == DateWidget::DAY) {
+            if (data->BufTextLen == 2) {
+                widget->m_change_focus = true;
+                widget->m_focus = DateWidget::MONTH;
+            }
+        }
+        else if (widget->m_current_focus == DateWidget::MONTH) {
+            if (data->BufTextLen == 2) {
+                widget->m_change_focus = true;
+                widget->m_focus = DateWidget::YEAR;
+            }
+        }
+        else if (widget->m_current_focus == DateWidget::YEAR) {
+            int current_year = getCurrentDate().getYear() - 2000;
+            if (data->BufTextLen == 2) {
+                int written_year = std::stoi(data->Buf);
+                if (written_year != 19 && written_year != 20) {
+                    int threshold = current_year - written_year + 1;
+                    std::string repl;
+                    if (threshold >= 0) {
+                        repl = std::to_string(written_year + 2000);
+                    }
+                    else {
+                        repl = std::to_string(written_year + 1900);
+                    }
+                    for (int i = 0;i < 4;i++)
+                        data->Buf[i] = repl[i];
+                    data->Buf[4] = 0;
+                    data->BufTextLen = (int)strlen(data->Buf);
+                    data->BufDirty = true;
+                    data->CursorPos = 4;
+                }
+            }
+        }
+    }
+
+    if (!isdigit(data->EventChar))
+        return 1;
+    return 0;
+}
+
+void DateWidget::input(Focus which) {
+    bool error;
+    bool end = false;
+    float width = 51.f;
+    std::string* content;
+    size_t max_size = 3;
+    std::string label;
+    std::string hint;
+
+    if (which == DAY) {
+        error = m_day_error;
+        content = &m_day;
+        label = labelize(m_id, "##day");
+        hint = "Jour";
+    }
+    else if (which == MONTH) {
+        error = m_month_error;
+        content = &m_month;
+        label = labelize(m_id, "##month");
+        hint = "Mois";
+    }
+    else {
+        error = m_year_error;
+        content = &m_year;
+        label = labelize(m_id, "##year");
+        hint = "Année";
+        width = 80.f;
+        max_size = 5;
+        end = true;
+    }
+    if (error) {
+        // ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(125, 0, 0, 79));
+    }
+    ImGui::SetNextItemWidth(width);
+    if (m_focus == which) {
+        setFocus();
+    }
+
+    ImGui::InputTextWithHint(label.c_str(), hint.c_str(), content->data(), max_size,
+        ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_CallbackEdit
+        , FilterInput, this
+    );
+
+    if (ImGui::IsItemActive() && !m_change_focus) {
+        m_current_focus = which;
+    }
+    if (!end)
+        ImGui::SameLine();
+    // if (error) {
+        // ImGui::PopStyleColor();
+// }
+}
+
+Date DateWidget::getDate() {
+    int day = std::stoi(m_day);
+    int month = std::stoi(m_month);
+    int year = std::stoi(m_year);
+    Date date((uint8_t)day, (uint8_t)month, (uint16_t)year);
+    return date;
 }
 
 void DateWidget::FrameUpdate() {
-    if (m_focus == DAY) {
-        if (m_day.size() == 2) {
-            m_focus = MONTH;
-        }
-    }
-    else if (m_focus == MONTH) {
-        if (m_month.size() == MONTH) {
-            m_focus = YEAR;
-        }
-    }
-    else {
-
-    }
-
-    if (m_focus == DAY) {
-        setFocus();
-    }
-    ImGui::SetNextItemWidth(40.f);
-    ImGui::InputTextWithHint(labelize(m_id, "##jour").c_str(), "Jour", &m_day);
-    ImGui::SameLine();
-
-    if (m_focus == MONTH) {
-        setFocus();
-    }
-    ImGui::SetNextItemWidth(40.f);
-    ImGui::InputTextWithHint(labelize(m_id, "##mois").c_str(), "Mois", &m_month);
-    ImGui::SameLine();
-
-    if (m_focus == YEAR) {
-        setFocus();
-    }
-    ImGui::SetNextItemWidth(80.f);
-    ImGui::InputTextWithHint(labelize(m_id, "##annee").c_str(), "Année", &m_year);
-    ImGui::SameLine();
+    // ImGui::InputTextWithHint("fdsf", "fdfs", &m_day, ImGuiInputTextFlags_CharsDecimal);
+    input(DAY);
+    input(MONTH);
+    input(YEAR);
 }
