@@ -34,6 +34,20 @@ void DateWidget::setFocus() {
 }
 
 void DateWidget::BeforeFrameUpdate() {
+    m_day_error = false;
+    m_month_error = false;
+    if (strlen(m_day.data())) {
+        int day = std::stoi(m_day);
+        if (day < 1 || day > 31) {
+            m_day_error = true;
+        }
+    }
+    if (strlen(m_month.data())) {
+        int month = std::stoi(m_month);
+        if (month < 1 || month > 12) {
+            m_month_error = true;
+        }
+    }
 }
 
 int FilterInput(ImGuiInputTextCallbackData* data) {
@@ -112,7 +126,7 @@ void DateWidget::input(Focus which) {
         end = true;
     }
     if (error) {
-        // ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(125, 0, 0, 79));
+        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(125, 0, 0, 79));
     }
     ImGui::SetNextItemWidth(width);
     if (m_focus == which) {
@@ -129,21 +143,29 @@ void DateWidget::input(Focus which) {
     }
     if (!end)
         ImGui::SameLine();
-    // if (error) {
-        // ImGui::PopStyleColor();
-// }
+    if (error) {
+        ImGui::PopStyleColor();
+    }
 }
 
 Date DateWidget::getDate() {
-    int day = std::stoi(m_day);
-    int month = std::stoi(m_month);
-    int year = std::stoi(m_year);
+    int day = 0;
+    int month = 0;
+    int year = 0;
+    if (strlen(m_day.data())) {
+        day = std::stoi(m_day);
+    }
+    if (strlen(m_month.data())) {
+        month = std::stoi(m_month);
+    }
+    if (strlen(m_year.data())) {
+        year = std::stoi(m_year);
+    }
     Date date((uint8_t)day, (uint8_t)month, (uint16_t)year);
     return date;
 }
 
 void DateWidget::FrameUpdate() {
-    // ImGui::InputTextWithHint("fdsf", "fdfs", &m_day, ImGuiInputTextFlags_CharsDecimal);
     input(DAY);
     input(MONTH);
     input(YEAR);
