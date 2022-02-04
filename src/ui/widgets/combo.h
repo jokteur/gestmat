@@ -22,6 +22,8 @@ public:
     std::string getValue();
     int getSelected();
 
+    void setSelect(const std::vector<std::string>& select, bool empty_first = false);
+
     void FrameUpdate() override;
     void BeforeFrameUpdate() override {}
 

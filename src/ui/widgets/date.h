@@ -35,6 +35,9 @@ public:
     void FrameUpdate() override;
     void BeforeFrameUpdate() override;
 
+    void setToday();
+    void setDate(uint8_t day, uint8_t month, uint16_t year);
+
     Date getDate();
 
     void reset();

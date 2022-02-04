@@ -7,7 +7,7 @@ Combo::Combo(UIState_ptr ui_state, std::vector<std::string> select, int default_
     : Drawable(ui_state) {
     m_selected = default_select;
     if (empty_first) {
-        m_select.push_back(" ");
+        m_select.push_back("##empty_select");
     }
     for (auto& str : select) {
         m_select.push_back(str);
@@ -23,7 +23,7 @@ Combo::Combo(UIState_ptr ui_state, std::vector<std::string> select, std::string 
 
     int i = 0;
     if (empty_first) {
-        m_select.push_back(" ");
+        m_select.push_back("##empty_select");
         i++;
     }
     for (auto& str : select) {
@@ -40,6 +40,27 @@ Combo::Combo(UIState_ptr ui_state, std::vector<std::string> select, std::string 
     m_ui_state->imID++;
 }
 
+void Combo::set_select(const std::vector<std::string>& select, bool empty_first) {
+    int i = 0;
+    m_select.clear();
+    if (empty_first) {
+        m_select.push_back("##empty_select");
+        i++;
+    }
+    for (auto& str : select) {
+        i++;
+        m_select.push_back(str);
+    }
+    m_selected = 0;
+
+    m_id = m_ui_state->imID;
+    m_ui_state->imID++;
+}
+
+void Combo::setSelect(const std::vector<std::string>& select, bool empty_first) {
+    set_select(select, empty_first);
+}
+
 std::string Combo::getValue() {
     std::string str = m_select[m_selected];
     if (str == "##empty_select")
@@ -52,7 +73,7 @@ int Combo::getSelected() {
 }
 
 void Combo::FrameUpdate() {
-    if (ImGui::BeginCombo(labelize(m_id, "combo_select").c_str(), m_select[m_selected].c_str())) {
+    if (ImGui::BeginCombo(labelize(m_id, "##combo_select").c_str(), m_select[m_selected].c_str())) {
         for (int n = 0;n < m_select.size();n++) {
             bool is_selected = m_select[n] == m_select[m_selected];
             if (ImGui::Selectable(m_select[n].c_str(), is_selected)) {

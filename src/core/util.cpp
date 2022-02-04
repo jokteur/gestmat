@@ -15,6 +15,9 @@ core::Date::Date(uint8_t day_, uint8_t month_, uint16_t year_) {
         month = 0;
         year = 0;
     }
+    else {
+        is_valid = true;
+    }
 }
 
 long long int core::getTimestamp() {

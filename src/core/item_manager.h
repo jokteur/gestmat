@@ -175,6 +175,10 @@ namespace core {
             std::optional<Person_ptr> getPerson(PersonID person_id);
             std::optional<Loan_ptr> getLoan(LoanID loan_id);
 
+            bool isLoaned(ItemID item_id);
+
+            std::optional<std::set<LoanID>> findLoans(ItemID);
+
             std::optional<PropertyID> findPropertyByName(const std::string& name);
             std::optional<CategoryID> findCategoryByName(const std::string& name);
 

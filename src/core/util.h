@@ -45,6 +45,11 @@ namespace core {
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(Date, day, month, year, is_valid);
 
+        uint8_t getDay() { return day; }
+        uint8_t getMonth() { return month; }
+        uint16_t getYear() { return year; }
+
+        bool isValid() { return is_valid; }
         std::string format(std::string fmt);
     };
 

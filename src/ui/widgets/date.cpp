@@ -94,6 +94,38 @@ int FilterInput(ImGuiInputTextCallbackData* data) {
         return 1;
     return 0;
 }
+void DateWidget::setToday() {
+    Date today = getCurrentDate();
+    setDate(today.getDay(), today.getMonth(), today.getYear());
+}
+void DateWidget::setDate(uint8_t day, uint8_t month, uint16_t year) {
+    auto day_s = std::to_string(day);
+    auto month_s = std::to_string(month);
+    auto year_s = std::to_string(year);
+    if (day < 10) {
+        day_s = "0" + day_s;
+    }
+    if (month < 10) {
+        month_s = "0" + month_s;
+    }
+    m_day = day_s;
+    m_month = month_s;
+    m_year = year_s;
+    // m_day.reserve(2);
+    // m_month.reserve(2);
+    // m_year.reserve(4);
+    // for (int i = 0;i < 4;i++) {
+    //     if (i < day_s.length())
+    //         m_day[i] = day_s[i];
+    //     if (i < month_s.length())
+    //         m_month[i] = month_s[i];
+
+    //     m_year[i] = year_s[i];
+    // }
+    // m_day[3] = 0;
+    // m_month[3] = 0;
+    // m_year[5] = 0;
+}
 
 void DateWidget::input(Focus which) {
     bool error;

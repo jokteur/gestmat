@@ -5,8 +5,72 @@
 #include "imgui_stdlib.h"
 #include "imgui_internal.h"
 
-ItemsLoans::ItemsLoans(UIState_ptr ui_state) : Drawable(ui_state), m_birthday(ui_state) {
+ItemsLoans::ItemsLoans(UIState_ptr ui_state) : Drawable(ui_state), m_birthday(ui_state), m_loan_date(ui_state) {
+    reset();
+}
+void ItemsLoans::reset() {
+    m_surname = "";
+    m_name = "";
+    m_place = "";
+    m_selected_items.clear();
+    m_selected_item_ids.clear();
+    m_select_person = nullptr;
+    m_current_date = getCurrentDate();
+    m_selected_items.push_back(std::make_shared<SelectItemWidget>(m_ui_state));
+    m_search_results.clear();
+    m_birthday.reset();
+    m_loan_date.setToday();
+    m_note = "";
+    m_search_in = NONE;
+}
 
+void ItemsLoans::save() {
+    if (m_selected_items.empty())
+        return;
+
+    Item::LoanID prev_loan = -1;
+
+    for (auto item_id : m_selected_item_ids) {
+        auto loan_res = m_manager->findLoans(item_id);
+        if (loan_res.has_value()) {
+            for (auto loan_id : loan_res.value())
+                m_manager->retireLoan(loan_id, getCurrentDate());
+        }
+        Item::Note note{ .content = m_note,.timestamp = getTimestamp() };
+        if (prev_loan != -1)
+            note = {};
+
+        if (m_select_person != nullptr) {
+            prev_loan = m_manager->newLoan(
+                item_id,
+                note,
+                m_current_date,
+                m_select_person->id).value();
+        }
+        else if (prev_loan != -1) {
+            auto loan = m_manager->getLoan(prev_loan).value();
+            prev_loan = m_manager->newLoan(
+                item_id,
+                note,
+                m_current_date,
+                loan->person).value();
+        }
+        else {
+            prev_loan = m_manager->newLoan(
+                item_id,
+                note,
+                m_current_date,
+                Item::Person{
+                    .name = m_name,
+                    .surname = m_surname,
+                    .place = m_place,
+                    .notes = {},
+                    .birthday = m_birthday.getDate()
+                }).value();
+        }
+    }
+    m_workspace.save("emprunt_objets");
+    reset();
 }
 
 int Search(ImGuiInputTextCallbackData* data) {
@@ -160,14 +224,92 @@ void ItemsLoans::person_widget() {
     ImGui::SetCursorPosX(pos_x + spacing);
     ImGui::SetNextItemWidth(200.f);
     ImGui::InputTextMultiline("##in_note", &m_note, ImVec2(0, 100.f));
-
 }
 
 void ItemsLoans::BeforeFrameUpdate() {
     m_birthday.BeforeFrameUpdate();
+    m_loan_date.BeforeFrameUpdate();
+
+    std::set<std::vector<select_item_ptr>::iterator> to_destroy;
+    for (auto it = m_selected_items.begin();it != m_selected_items.end();it++) {
+        (*it)->BeforeFrameUpdate();
+        if ((*it)->destroy_me()) {
+            to_destroy.insert(it);
+            auto item_id = (*it)->getSelectedItem();
+            if (item_id != -1)
+                m_selected_item_ids.erase(item_id);
+        }
+    }
+    for (auto it : to_destroy) {
+        m_selected_items.erase(it);
+    }
+
 }
 
 void ItemsLoans::FrameUpdate() {
     m_manager = m_workspace.getCurrentManager();
+    title("Prêt", m_ui_state);
+    ImGui::SameLine();
+    m_save_error = "Merci de choisir au moins un objet avant de sauvegarder";
+    if (!m_selected_item_ids.empty())
+        m_save_error = "";
+    if (button("Sauvegarder##save_loan", m_ui_state, m_save_error)) {
+        save();
+    }
+    ImGui::Separator();
+
+    ImGui::BeginChild("Pret_window");
     person_widget();
+
+    ImGui::AlignTextToFramePadding();
+    Tempo::PushFont(m_ui_state->font_bold);
+    ImGui::Text("Date d'emprunt:");
+    Tempo::PopFont();
+    ImGui::SameLine();
+
+    ImGui::Text(m_current_date.format("%d/%m/%Y").c_str());
+    ImGui::SameLine();
+    button("Changer##change_date", m_ui_state);
+    if (ImGui::BeginPopupContextItem(0, ImGuiPopupFlags_MouseButtonLeft)) {
+        m_loan_date.FrameUpdate();
+        ImGui::SameLine();
+        if (button("OK##close_popup", m_ui_state)) {
+            auto date = m_loan_date.getDate();
+            if (date.isValid()) {
+                m_current_date = date;
+            }
+            else {
+                m_loan_date.setToday();
+                m_current_date = getCurrentDate();
+            }
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    Tempo::PushFont(m_ui_state->font_bold);
+    ImGui::Text("Objet(s) à emprunter");
+    Tempo::PopFont();
+
+    std::string error;
+    if (is_selection_active) {
+        error = "Merci de finir de choisir un premier objet avant d'ajouter un deuxième";
+    }
+    if (button("+##add_item", m_ui_state, error)) {
+        m_selected_items.push_back(std::make_shared<SelectItemWidget>(m_ui_state));
+    }
+
+    is_selection_active = false;
+    for (auto& widget : m_selected_items) {
+        widget->FrameUpdate();
+        auto item_id = widget->getSelectedItem();
+        widget->avoidTheseItems(m_selected_item_ids);
+        if (item_id != -1) {
+            m_selected_item_ids.insert(item_id);
+        }
+        else {
+            is_selection_active = true;
+        }
+    }
+    ImGui::EndChild();
 }

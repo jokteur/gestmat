@@ -68,6 +68,10 @@ namespace core {
             }
         }
 
+        bool Manager::isLoaned(ItemID item_id) {
+            return m_item_loan_map.contains(item_id);
+        }
+
         std::optional<bool> Manager::isRetired(ObjectID id) {
             if (find_in_map<ItemID, Item_ptr>(m_registered_items, (ItemID)id)) {
                 return std::optional<bool>(false);
@@ -178,6 +182,12 @@ namespace core {
                 return std::optional<Loan_ptr>(m_retired_loans[loan_id]);
             }
             return std::optional<Loan_ptr>();
+        }
+
+        std::optional<std::set<LoanID>> Manager::findLoans(ItemID item_id) {
+            if (!m_item_loan_map.contains(item_id))
+                return std::optional<std::set<LoanID>>();
+            return std::optional<std::set<LoanID>>(m_item_loan_map[item_id]);
         }
 
         ItemID Manager::createItem(Item item) {
@@ -330,7 +340,7 @@ namespace core {
         std::optional<LoanID> Manager::new_loan(ItemID item_id, Note note, Date date, PersonID person_id) {
             Loan loan = {
                 .item = item_id,
-                .note = note,
+                .note = {},
                 .date = date,
                 .person = person_id,
             };
@@ -340,6 +350,12 @@ namespace core {
             }
             m_item_loan_map[item_id].insert(loan.id);
             m_person_loan_map[person_id].insert(loan.id);
+
+            // Right now, notes are going to person, not loan
+            if (!note.content.empty()) {
+                auto person = getPerson(person_id).value();
+                person->notes.push_back(note);
+            }
             change();
             return std::optional<LoanID>(loan.id);
         }
