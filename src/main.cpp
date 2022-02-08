@@ -10,6 +10,7 @@
 
 
 using namespace core;
+// #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 int main() {
     PyAPI::Handler::getInstance();
 
@@ -17,6 +18,7 @@ int main() {
         .app_name = "Gestmat",
         .app_title = "Gestion matériel",
     };
+    config.imgui_config_flags = 0;
 
     MainApp* app = new MainApp();
     Tempo::Run(app, config);

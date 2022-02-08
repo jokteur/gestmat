@@ -101,14 +101,9 @@ void SelectItemWidget::show_items(Item::CategoryID cat_id) {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 2));
     ImGui::PushStyleColor(ImGuiCol_FrameBg, 0);
 
-    float height_left = ImGui::GetContentRegionAvail().y;
-
     ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_Sortable
         | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable
         | ImGuiTableFlags_SizingStretchProp;
-
-    if (height_left > 300.f)
-        flags |= ImGuiTableFlags_ScrollY;
 
 
     int extra_cols = 1;
@@ -210,7 +205,9 @@ void SelectItemWidget::FrameUpdate() {
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Catégorie:");
         ImGui::SameLine();
-        ImGui::SetNextItemWidth(200.f);
+        float item_height = ImGui::GetTextLineHeightWithSpacing();
+        const float spacing = item_height * 6;
+        ImGui::SetNextItemWidth(spacing);
         if (m_cat_combo != nullptr) {
             m_cat_combo->FrameUpdate();
             std::string select = m_cat_combo->getValue();

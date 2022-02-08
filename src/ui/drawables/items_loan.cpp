@@ -152,12 +152,13 @@ void ItemsLoans::person_widget() {
     Tempo::PopFont();
 
     float pos_x = ImGui::GetCursorPosX();
-    const float spacing = 200.f;
+    float item_height = ImGui::GetTextLineHeightWithSpacing();
+    const float spacing = item_height * 6;
 
     ImGui::Text("Nom:"); ImGui::SameLine();
     ImGui::SetCursorPosX(pos_x + spacing);
     if (m_select_person == nullptr) {
-        ImGui::SetNextItemWidth(200.f);
+        ImGui::SetNextItemWidth(spacing);
         ImGui::InputText("##in_surname", &m_surname, ImGuiInputTextFlags_CallbackEdit, Search, this);
         if (ImGui::IsItemActive()) {
             m_search_in = SURNAME;
@@ -170,7 +171,7 @@ void ItemsLoans::person_widget() {
         // I want that the button is here
         m_search_results.clear();
         ImGui::SameLine();
-        ImGui::SetCursorPosX(pos_x + 400.f);
+        ImGui::SetCursorPosX(pos_x + spacing * 2);
         if (button("Enlever personne", m_ui_state)) {
             m_select_person = nullptr;
         }
@@ -186,7 +187,7 @@ void ItemsLoans::person_widget() {
     ImGui::Text("Prénom:"); ImGui::SameLine();
     ImGui::SetCursorPosX(pos_x + spacing);
     if (m_select_person == nullptr) {
-        ImGui::SetNextItemWidth(200.f);
+        ImGui::SetNextItemWidth(spacing);
         ImGui::InputText("##in_name", &m_name, ImGuiInputTextFlags_CallbackEdit, Search, this);
         if (ImGui::IsItemActive()) {
             m_search_in = NAME;
@@ -211,7 +212,7 @@ void ItemsLoans::person_widget() {
     ImGui::Text("Unité/chambre:"); ImGui::SameLine();
     ImGui::SetCursorPosX(pos_x + spacing);
     if (m_select_person == nullptr) {
-        ImGui::SetNextItemWidth(200.f);
+        ImGui::SetNextItemWidth(spacing);
         ImGui::InputText("##in_place", &m_place);
     }
     else {
@@ -222,7 +223,7 @@ void ItemsLoans::person_widget() {
 
     ImGui::Text("Remarque:"); ImGui::SameLine();
     ImGui::SetCursorPosX(pos_x + spacing);
-    ImGui::SetNextItemWidth(200.f);
+    ImGui::SetNextItemWidth(spacing);
     ImGui::InputTextMultiline("##in_note", &m_note, ImVec2(0, 100.f));
 }
 

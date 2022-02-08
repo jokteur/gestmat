@@ -111,26 +111,13 @@ void DateWidget::setDate(uint8_t day, uint8_t month, uint16_t year) {
     m_day = day_s;
     m_month = month_s;
     m_year = year_s;
-    // m_day.reserve(2);
-    // m_month.reserve(2);
-    // m_year.reserve(4);
-    // for (int i = 0;i < 4;i++) {
-    //     if (i < day_s.length())
-    //         m_day[i] = day_s[i];
-    //     if (i < month_s.length())
-    //         m_month[i] = month_s[i];
-
-    //     m_year[i] = year_s[i];
-    // }
-    // m_day[3] = 0;
-    // m_month[3] = 0;
-    // m_year[5] = 0;
 }
 
 void DateWidget::input(Focus which) {
     bool error;
     bool end = false;
-    float width = 51.f;
+    float item_height = ImGui::GetTextLineHeightWithSpacing();
+    float width = item_height * 1.7f;
     std::string* content;
     size_t max_size = 3;
     std::string label;
@@ -153,7 +140,7 @@ void DateWidget::input(Focus which) {
         content = &m_year;
         label = labelize(m_id, "##year");
         hint = "Année";
-        width = 80.f;
+        width = item_height * 2.2f;
         max_size = 5;
         end = true;
     }
