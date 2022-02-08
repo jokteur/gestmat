@@ -1,5 +1,13 @@
 #include "misc.h"
 
+#include <chrono>
+#include <string>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <sstream>
+
+
 void title(std::string title, UIState_ptr ui_state) {
     Tempo::PushFont(ui_state->font_title);
     ImGui::Text(title.c_str());
@@ -68,11 +76,56 @@ void help(std::string content) {
 
 std::string format_CET(std::chrono::system_clock::time_point tp) {
     using namespace std::chrono;
-    static auto const CET = locate_zone("Etc/GMT-1");
-    return std::format("{:%F à %Hh%M}", zoned_time{ CET, floor<milliseconds>(tp) });
+    tp += 1h;
+
+    using days = std::chrono::duration<int, std::ratio<86400>>;
+
+    // Get time_points with both millisecond and day precision
+    auto tp_ms = time_point_cast<milliseconds>(tp);
+    auto tp_d = time_point_cast<days>(tp_ms);
+
+    // Get {y, m, d} from tp_d
+    auto z = tp_d.time_since_epoch().count();
+    static_assert(std::numeric_limits<unsigned>::digits >= 18,
+        "This algorithm has not been ported to a 16 bit unsigned integer");
+    static_assert(std::numeric_limits<int>::digits >= 20,
+        "This algorithm has not been ported to a 16 bit signed integer");
+    z += 719468;
+    const int era = (z >= 0 ? z : z - 146096) / 146097;
+    const unsigned doe = static_cast<unsigned>(z - era * 146097);          // [0, 146096]
+    const unsigned yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;  // [0, 399]
+    int y = static_cast<int>(yoe) + era * 400;
+    const unsigned doy = doe - (365 * yoe + yoe / 4 - yoe / 100);                // [0, 365]
+    const unsigned mp = (5 * doy + 2) / 153;                                   // [0, 11]
+    const unsigned d = doy - (153 * mp + 2) / 5 + 1;                             // [1, 31]
+    const unsigned m = mp + (mp < 10 ? 3 : -9);                            // [1, 12]
+    y += (m <= 2);
+
+    // Get milliseconds since the local midnight
+    auto ms = tp_ms - tp_d;
+
+    // Get {h, M, s, ms} from milliseconds since midnight
+    auto h = duration_cast<hours>(ms);
+    ms -= h;
+    auto M = duration_cast<minutes>(ms);
+    ms -= M;
+    auto s = duration_cast<seconds>(ms);
+    ms -= s;
+
+    // Format {y, m, d, h, M, s, ms} as yyyy-MM-dd'T'HH:mm:ss'.'SSS+0100
+    std::ostringstream os;
+    os.fill('0');
+    os << std::setw(4) << y << '-' << std::setw(2) << m << '-' << std::setw(2)
+        << d;
+    os << ' ';
+    os << std::setw(2) << h.count() << 'h'
+        << std::setw(2) << M.count();
+    return os.str();
 }
 
 void timestampToText(long long int timestamp) {
+    // Date library is cursed on some computers that are
+    // not up-to-date, roll my own
     std::chrono::seconds time(timestamp);
     std::chrono::time_point<std::chrono::system_clock> dt(time);
     std::string text = format_CET(dt);

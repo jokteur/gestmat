@@ -86,6 +86,7 @@ include_directories(vendors/zlib)
 # Hack because zconf.h keeps disappearing when building
 target_include_directories(zlib PUBLIC "${PROJECT_SOURCE_DIR}/vendors/zconf")
 
+
 # ----
 # Json
 # ----
@@ -105,6 +106,8 @@ file (GLOB source_list RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
         src/ui/widgets/*.h src/ui/widgets/*.cpp
         src/ui/*.cpp src/ui/*.h
     )
+
+#Date
 
 add_executable(${PROJECT_NAME} ${source_list} src/main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE zlib nlohmann_json Tempo ${Python_LIBRARIES})

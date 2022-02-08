@@ -64,8 +64,10 @@ void ItemsState::fill_items() {
 void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) {
     ImGui::TableNextRow();
 
-    auto person = m_manager->getPerson(loans[0].second->person).value();
+    // std::cout << loans.size() << std::endl;
 
+    auto person = m_manager->getPerson(loans[0].second->person).value();
+    // std::cout << person->name << std::endl;
     ImGui::TableSetColumnIndex(SURNAME);
     ImGui::Text(person->surname.c_str());
 
