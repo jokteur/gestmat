@@ -155,11 +155,17 @@ void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) 
 }
 
 void ItemsState::give_back() {
+    std::vector<Item::LoanID> to_delete;
     for (auto pair : m_loans_checkbox) {
         if (pair.second) {
             m_manager->retireLoan(pair.first, getCurrentDate());
+            to_delete.push_back(pair.first);
         }
     }
+    for (auto it : to_delete) {
+        m_loans_checkbox.erase(it);
+    }
+
     m_workspace.save("rendre_objet");
 }
 
@@ -175,7 +181,17 @@ void ItemsState::FrameUpdate() {
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Actions:");
     ImGui::SameLine();
-    if (button("Rendre les objects sélectionnés", m_ui_state)) {
+    std::string label = "Rendre les objets sélectionnés";
+
+    int num = 0;
+    for (auto pair : m_loans_checkbox) {
+        if (pair.second)
+            num++;
+    }
+    if (num > 0)
+        label += " (" + std::to_string(num) + ")";
+    label += "##give_back_button";
+    if (button(label, m_ui_state)) {
         give_back();
     }
 

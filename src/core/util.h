@@ -71,6 +71,10 @@ namespace core {
             return map[prop_id];
         }
 
+        void erase(T it) {
+            map.erase(it);
+        }
+
         std::map<T, bool>::iterator begin() {
             return map.begin();
         }
