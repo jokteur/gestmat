@@ -65,11 +65,6 @@ add_subdirectory(src/python)
 add_subdirectory(vendors/pybind11)
 include_directories(vendors/pybind11/include)
 
-# ------
-# TOML11
-# ------
-include_directories(vendors/toml11)
-
 # --------
 # TempoApp
 # --------
