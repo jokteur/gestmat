@@ -187,6 +187,7 @@ void HistoryWidget::previewBar() {
                 m_visualize = false;
                 m_show = false;
                 show = false;
+                m_ui_state->read_only = false;
                 m_workspace.save("revenir_sur_historique");
             }
         };
@@ -234,6 +235,7 @@ void HistoryWidget::abandon() {
     m_visualize = false;
     m_show = false;
     m_current_file = nullptr;
+    m_ui_state->read_only = false;
     m_workspace.setCurrentManager(m_manager);
 }
 
