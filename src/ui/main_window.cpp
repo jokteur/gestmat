@@ -40,9 +40,12 @@ void MainApp::FrameUpdate() {
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
 #endif
-    ImGui::Begin("Main window", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Main window", nullptr,
+        ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize
+        | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
     m_menubar->FrameUpdate();
+    m_menubar->DrawHistory();
     m_navbar->FrameUpdate();
 
     if (!m_open_error.empty()) {

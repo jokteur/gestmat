@@ -9,7 +9,18 @@
 #include "imgui_internal.h"
 #include "imgui_stdlib.h"
 
-std::string format_CET(std::chrono::system_clock::time_point tp);
+struct DateTime {
+    int year;
+    int month;
+    int day;
+    int hour;
+    int minute;
+    int second;
+};
+
+DateTime getDatetime(long long int timestamp);
+
+std::string format_CET(long long int timestamp);
 
 void title(std::string title, UIState_ptr ui_state);
 

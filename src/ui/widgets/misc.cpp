@@ -74,7 +74,9 @@ void help(std::string content) {
     }
 }
 
-std::string format_CET(std::chrono::system_clock::time_point tp) {
+DateTime getDatetime(long long int timestamp) {
+    std::chrono::seconds time(timestamp);
+    std::chrono::time_point<std::chrono::system_clock> tp(time);
     using namespace std::chrono;
     tp += 1h;
 
@@ -112,22 +114,33 @@ std::string format_CET(std::chrono::system_clock::time_point tp) {
     auto s = duration_cast<seconds>(ms);
     ms -= s;
 
+    return DateTime{
+        .year = y,
+        .month = (int)m,
+        .day = (int)d,
+        .hour = h.count(),
+        .minute = M.count(),
+        .second = (int)s.count()
+    };
+}
+
+std::string format_CET(long long int timestamp) {
+    auto datetime = getDatetime(timestamp);
     // Format {y, m, d, h, M, s, ms} as yyyy-MM-dd'T'HH:mm:ss'.'SSS+0100
     std::ostringstream os;
     os.fill('0');
-    os << std::setw(4) << y << '-' << std::setw(2) << m << '-' << std::setw(2)
-        << d;
+    os << std::setw(4) << datetime.year << '-'
+        << std::setw(2) << datetime.month << '-' << std::setw(2)
+        << datetime.day;
     os << ' ';
-    os << std::setw(2) << h.count() << 'h'
-        << std::setw(2) << M.count();
+    os << std::setw(2) << datetime.hour << 'h'
+        << std::setw(2) << datetime.minute;
     return os.str();
 }
 
 void timestampToText(long long int timestamp) {
     // Date library is cursed on some computers that are
     // not up-to-date, roll my own
-    std::chrono::seconds time(timestamp);
-    std::chrono::time_point<std::chrono::system_clock> dt(time);
-    std::string text = format_CET(dt);
+    std::string text = format_CET(timestamp);
     ImGui::Text(text.c_str());
 }
