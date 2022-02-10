@@ -303,6 +303,38 @@ void ItemsListWidget::show_row(ItemInfos& item_info) {
     }
 }
 
+void ItemsListWidget::show_history(ItemInfos& item_info) {
+    const modal_fct error_fct = [this, &item_info](bool& show, bool&, bool&) {
+        auto retired_loans = m_manager->findRetiredLoans(item_info.id);
+        auto loans = m_manager->findLoans(item_info.id);
+        if (!retired_loans.has_value()) {
+            ImGui::Text("Aucun emprunt trouvé");
+        }
+        else {
+            for (auto loan_id : retired_loans.value()) {
+                auto loan = m_manager->getLoan(loan_id).value();
+                auto person = m_manager->getPerson(loan->person).value();
+                Tempo::PushFont(m_ui_state->font_bold);
+                ImGui::Text((person->surname + " " + person->name).c_str());
+                Tempo::PopFont();
+                ImGui::SameLine();
+                std::string txt = ", " + person->birthday.format("%d/%m/%Y");
+                txt += ", " + person->place;
+                ImGui::Text(txt.c_str());
+                ImGui::Indent(40.f);
+                ImGui::Text(("Emprunté le " + loan->date.format("%d/%m/%Y")).c_str());
+                ImGui::Text(("Rendu le " + loan->date_back.format("%d/%m/%Y")).c_str());
+                ImGui::Unindent(40.f);
+            }
+        }
+        if (button(labelize(item_info.id, "OK"), m_ui_state)) {
+            show = false;
+        }
+    };
+    ImGui::SetNextWindowContentSize(ImVec2(800.f, 600.f));
+    Modals::getInstance().setModal("Historique de l'objet", error_fct);
+}
+
 void ItemsListWidget::FrameUpdate() {
     if (m_category == nullptr)
         return;

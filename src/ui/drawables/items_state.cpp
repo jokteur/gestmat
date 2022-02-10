@@ -182,16 +182,19 @@ void ItemsState::FrameUpdate() {
     ImGui::Text("Actions:");
     ImGui::SameLine();
     std::string label = "Rendre les objets sélectionnés";
+    std::string err = "Veuillez sélectionner au min. 1 objet (dans la colonne à droite)";
 
     int num = 0;
     for (auto pair : m_loans_checkbox) {
         if (pair.second)
             num++;
     }
-    if (num > 0)
+    if (num > 0) {
         label += " (" + std::to_string(num) + ")";
+        err = "";
+    }
     label += "##give_back_button";
-    if (button(label, m_ui_state)) {
+    if (button(label, m_ui_state, err)) {
         give_back();
     }
 

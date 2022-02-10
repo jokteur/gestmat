@@ -18,6 +18,7 @@ int main() {
         .app_name = "Gestmat",
         .app_title = "Gestion matériel",
     };
+    config.maximized = true;
     config.imgui_config_flags = 0;
 
     MainApp* app = new MainApp();

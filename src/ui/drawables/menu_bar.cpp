@@ -6,6 +6,10 @@ void MenuBar::FrameUpdate() {
     if (ImGui::BeginMenu("Fichiers")) {
         ImGui::EndMenu();
     }
+    if (ImGui::Button("show_demo")) {
+        demo = !demo;
+    }
+    ImGui::ShowDemoWindow(&demo);
     float width = ImGui::GetContentRegionAvail().x;
 
     float button_width = ImGui::CalcTextSize("Historique").x;

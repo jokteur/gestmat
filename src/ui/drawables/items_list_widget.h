@@ -66,6 +66,8 @@ private:
 
     void show_row(ItemInfos& item_info);
 
+    void show_history(ItemInfos& item_info);
+
 public:
     ItemsListWidget(UIState_ptr ui_state, Item::CategoryID cat_id = -1);
     void FrameUpdate() override;
