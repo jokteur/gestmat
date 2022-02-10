@@ -114,7 +114,9 @@ namespace core {
             long long int m_subscriber_counter = 0;
 
             std::map<ItemID, std::set<LoanID>> m_item_loan_map;
+            std::map<ItemID, std::set<LoanID>> m_past_item_loan_map;
             std::map<PersonID, std::set<LoanID>> m_person_loan_map;
+            std::map<PersonID, std::set<LoanID>> m_past_person_loan_map;
 
             std::map<ItemID, Item_ptr> m_registered_items;
             std::map<CategoryID, Category_ptr> m_registered_categories;
@@ -167,6 +169,7 @@ namespace core {
             // Returns all properties, retired or not
             std::set<PropertyID> getAllProperties();
             std::set<LoanID> getAllLoans();
+            std::vector<ItemID> getAllItems();
             std::set<LoanID> getActiveLoans();
 
             std::optional<Item_ptr> getItem(ItemID item_id);
@@ -178,6 +181,7 @@ namespace core {
             bool isLoaned(ItemID item_id);
 
             std::optional<std::set<LoanID>> findLoans(ItemID);
+            std::optional<std::set<LoanID>> findRetiredLoans(ItemID);
 
             std::optional<PropertyID> findPropertyByName(const std::string& name);
             std::optional<CategoryID> findCategoryByName(const std::string& name);
@@ -204,6 +208,8 @@ namespace core {
             std::optional<LoanID> newLoan(ItemID item_id, Note note, Date date, PersonID person_id);
             bool retireLoan(LoanID loan_id, core::Date date_back);
             bool unretireLoan(LoanID loan_id);
+
+            void buildRetiredLoanCorrespondance();
         };
     }  // namespace Item
 }  // namespace core

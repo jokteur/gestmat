@@ -128,6 +128,16 @@ namespace core {
             manager->m_item_loan_map = j["item_loan_map"];
             manager->m_person_loan_map = j["person_loan_map"];
 
+            int loan_maps = 0;
+            if (j.contains("past_item_loan_map")) {
+                loan_maps++;
+                manager->m_past_item_loan_map = j["past_item_loan_map"];
+            }
+            if (j.contains("past_person_loan_map")) {
+                loan_maps++;
+                manager->m_past_person_loan_map = j["past_person_loan_map"];
+            }
+
             // Items
             for (auto str : j["registered_items"]) {
                 Item item = str;
@@ -175,6 +185,10 @@ namespace core {
             }
 
             Base::setID(j["global_ID"]);
+            // if (loan_maps != 2) {
+            // manager->buildRetiredLoanCorrespondance();
+            // std::cout << manager->m_past_item_loan_map.size() << std::endl;
+            // }
 
             return "";
         }
@@ -211,6 +225,8 @@ namespace core {
             out_file["timestamp"] = getTimestamp();
             out_file["item_loan_map"] = manager->m_item_loan_map;
             out_file["person_loan_map"] = manager->m_person_loan_map;
+            out_file["past_item_loan_map"] = manager->m_past_item_loan_map;
+            out_file["past_person_loan_map"] = manager->m_past_person_loan_map;
 
             // Items
             for (auto& pair : manager->m_registered_items) {

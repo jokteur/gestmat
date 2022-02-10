@@ -110,6 +110,16 @@ namespace core {
             }
             return set;
         }
+        std::vector<ItemID> Manager::getAllItems() {
+            std::vector<ItemID> set;
+            for (auto cat_pair : m_registered_items) {
+                set.push_back(cat_pair.first);
+            }
+            for (auto cat_pair : m_retired_items) {
+                set.push_back(cat_pair.first);
+            }
+            return set;
+        }
         std::set<PropertyID> Manager::getAllProperties() {
             std::set<PropertyID> set;
             for (auto cat_pair : m_registered_properties) {
@@ -188,6 +198,12 @@ namespace core {
             if (!m_item_loan_map.contains(item_id))
                 return std::optional<std::set<LoanID>>();
             return std::optional<std::set<LoanID>>(m_item_loan_map[item_id]);
+        }
+
+        std::optional<std::set<LoanID>> Manager::findRetiredLoans(ItemID item_id) {
+            if (!m_past_item_loan_map.contains(item_id))
+                return std::optional<std::set<LoanID>>();
+            return std::optional<std::set<LoanID>>(m_past_item_loan_map[item_id]);
         }
 
         ItemID Manager::createItem(Item item) {
@@ -401,8 +417,23 @@ namespace core {
                 m_person_loan_map.erase(loan->person);
                 exchange_btw_maps<PersonID, Person_ptr>(m_registered_persons, m_retired_persons, loan->person);
             }
+            m_past_item_loan_map[loan->item].insert(loan_id);
+            m_past_person_loan_map[loan->person].insert(loan_id);
+
             change();
             return true;
+        }
+
+        void Manager::buildRetiredLoanCorrespondance() {
+            m_past_person_loan_map.clear();
+            m_past_item_loan_map.clear();
+            for (auto loan_pair : m_retired_loans) {
+                auto loan = loan_pair.second;
+                auto person = getPerson(loan->person).value();
+                auto loan_id = loan_pair.first;
+                m_past_item_loan_map[loan->item].insert(loan_id);
+                m_past_person_loan_map[loan->person].insert(loan_id);
+            }
         }
     }
 }
