@@ -28,6 +28,10 @@ private:
     void show_notes();
     void show_history();
     void show_actions();
+
+    void delete_item();
+    void retire_item();
+    void unretire_item();
 public:
     ShowItem(UIState_ptr ui_state);
     ~ShowItem();

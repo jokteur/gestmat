@@ -1,6 +1,7 @@
 #include "show_item.h"
 #include "ui/widgets/misc.h"
 #include "ui/imgui_util.h"
+#include "ui/widgets/modal.h"
 
 ShowItem::ShowItem(UIState_ptr ui_state) : Drawable(ui_state) {
     m_listener.filter = "change_manager";
@@ -118,19 +119,98 @@ void ShowItem::show_history() {
         ImGui::Text("Aucun emprunt trouvé");
     }
     if (retired_loans.has_value()) {
-        for (auto loan_id : retired_loans.value()) {
-            auto loan = m_manager->getLoan(loan_id).value();
-            auto person = m_manager->getPerson(loan->person).value();
-            person_widget(person);
-            ImGui::Indent(40.f);
-            ImGui::Text(("Emprunté le " + loan->date.format("%d/%m/%Y")).c_str());
-            ImGui::Text(("Rendu le " + loan->date_back.format("%d/%m/%Y")).c_str());
-            ImGui::Unindent(40.f);
+        std::map<std::string, std::vector<Item::Loan_ptr>> ordered_loans;
+        auto rloans = retired_loans.value();
+        for (auto it = rloans.begin();it != rloans.end();it++) {
+            auto loan = m_manager->getLoan(*it).value();
+            ordered_loans[loan->date.format("%Y%m%d")].push_back(loan);
+        }
+        for (auto it = ordered_loans.rbegin();it != ordered_loans.rend();it++) {
+            for (auto loan : it->second) {
+                auto person = m_manager->getPerson(loan->person).value();
+                // ImGui::Indent(40.f);
+                ImGui::Text(("Emprunté le " + loan->date.format("%d/%m/%Y")).c_str());
+                ImGui::SameLine();
+                ImGui::Text("par");
+                ImGui::SameLine();
+                person_widget(person);
+                ImGui::Text(("Rendu le " + loan->date_back.format("%d/%m/%Y")).c_str());
+                ImGui::Separator();
+                // ImGui::Unindent(40.f);
+            }
         }
     }
 }
-void ShowItem::show_actions() {
 
+void ShowItem::retire_item() {
+    const modal_fct error_fct = [this](bool& show, bool&, bool&) {
+        ImGui::Text("Vous êtes sur de retirer un objet.");
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10.f);
+        ImGui::Text("Cette action va rendre tous les emprunts liés à cet objet, mais il ne va pas être supprimé.\n"
+            "Un objet retiré ne peut plus être emprunté. Il est possible de restaurer les objets par la suite.");
+
+        if (button(labelize(m_item->id, "Annuler"), m_ui_state)) {
+            show = false;
+        }
+        ImGui::SameLine();
+        if (button(labelize(m_item->id, "Retirer"), m_ui_state)) {
+            m_manager->retireItem(m_item->id);
+            show = false;
+            m_workspace.save("retirer_objet");
+        }
+    };
+    Modals::getInstance().setModal("Voulez-vous retirer un objet ?", error_fct);
+
+}
+void ShowItem::delete_item() {
+    const modal_fct error_fct = [this](bool& show, bool&, bool&) {
+        ImGui::Text("Vous êtes sur de supprimer un objet.");
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10.f);
+        ImGui::Text("Cette action va rendre supprimer l'objet et ne pourra plus être restauré.\n");
+
+        if (button(labelize(m_item->id, "Annuler"), m_ui_state)) {
+            show = false;
+        }
+        ImGui::SameLine();
+        if (button(labelize(m_item->id, "Supprimer"), m_ui_state)) {
+            m_manager->deleteRetiredItem(m_item->id);
+            show = false;
+            m_workspace.save("supprimer_objet");
+        }
+    };
+    Modals::getInstance().setModal("Voulez-vous retirer un objet ?", error_fct);
+}
+void ShowItem::unretire_item() {
+    m_manager->unretireItem(m_item->id);
+    m_workspace.save("restaurer_objet");
+}
+
+void ShowItem::show_actions() {
+    bool is_retired = m_manager->isRetired(m_item->id).value();
+    if (is_retired) {
+        if (button(labelize(m_item->id, "Restaurer"), m_ui_state)) {
+            unretire_item();
+        }
+        ImGui::SameLine();
+        if (button(labelize(m_item->id, "Supprimer"), m_ui_state, "", ImVec4(0.8f, 0.1f, 0.1f, 0.7f))) {
+            delete_item();
+        }
+    }
+    else {
+        ImGui::Text("Objet perdu ou en réparation ?");
+        if (button(labelize(m_item->id, "Retirer"), m_ui_state, "", ImVec4(0.8f, 0.1f, 0.1f, 0.7f))) {
+            retire_item();
+        }
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text(
+                "L'action 'retirer' enlève un objet de la liste des objets empruntables.\n"
+                "Cela ne supprime pas directement l'objet. Pour pouvoir supprimer un objet\n"
+                "il faut d'abord le retirer puis le supprimer."
+            );
+            ImGui::EndTooltip();
+        }
+    }
 }
 
 void ShowItem::FrameUpdate() {

@@ -43,7 +43,7 @@ namespace core {
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Property, name, mandatory, no_edit, select, id);
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Note, content, timestamp, id);
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Category, name, properties, registered_items, properties_hide, id);
-        NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Loan, note, item, date, person, remainder_date, id);
+        NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Loan, note, item, date, date_back, person, remainder_date, id);
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Person, name, surname, place, notes, birthday, id);
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Item, category, notes, property_values, id);
 
@@ -176,10 +176,16 @@ namespace core {
             }
             // Loans
             for (auto str : j["registered_loans"]) {
+                if (!str.contains("date_back")) {
+                    str["date_back"] = Date{ 0,0,0 };
+                }
                 Loan loans = str;
                 manager->m_registered_loans[loans.id] = std::make_shared<Loan>(loans);
             }
             for (auto str : j["retired_loans"]) {
+                if (!str.contains("date_back")) {
+                    str["date_back"] = Date{ 0,0,0 };
+                }
                 Loan loans = str;
                 manager->m_retired_loans[loans.id] = std::make_shared<Loan>(loans);
             }

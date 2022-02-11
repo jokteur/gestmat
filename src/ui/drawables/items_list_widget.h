@@ -61,12 +61,6 @@ private:
 
     void remove_new_item(ItemInfos& item_info);
 
-    void delete_item(ItemInfos& item_info);
-
-    void retire_item(ItemInfos& item_info);
-
-    void unretire_item(ItemInfos& item_info);
-
     void fill_items(bool default_sort = false);
 
     void change_id();

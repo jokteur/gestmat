@@ -64,50 +64,6 @@ void ItemsListWidget::remove_new_item(ItemInfos& item_info) {
     }
 }
 
-void ItemsListWidget::delete_item(ItemInfos& item_info) {
-    const modal_fct error_fct = [this, &item_info](bool& show, bool&, bool&) {
-        ImGui::Text("Vous êtes sur de supprimer un objet.");
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10.f);
-        ImGui::Text("Cette action va rendre supprimer l'objet et ne pourra plus être restauré.\n");
-
-        if (button(labelize(m_cat_id, "Annuler"), m_ui_state)) {
-            show = false;
-        }
-        ImGui::SameLine();
-        if (button(labelize(m_cat_id, "Supprimer"), m_ui_state)) {
-            m_manager->deleteRetiredItem(item_info.item->id);
-            show = false;
-            m_workspace.save("supprimer_objet");
-        }
-    };
-    Modals::getInstance().setModal("Voulez-vous retirer un objet ?", error_fct);
-}
-
-void ItemsListWidget::retire_item(ItemInfos& item_info) {
-    const modal_fct error_fct = [this, &item_info](bool& show, bool&, bool&) {
-        ImGui::Text("Vous êtes sur de retirer un objet.");
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 10.f);
-        ImGui::Text("Cette action va rendre tous les emprunts liés à cet objet, mais il ne va pas être supprimé.\n"
-            "Un objet retiré ne peut plus être emprunté. Il est possible de restaurer les objets par la suite.");
-
-        if (button(labelize(m_cat_id, "Annuler"), m_ui_state)) {
-            show = false;
-        }
-        ImGui::SameLine();
-        if (button(labelize(m_cat_id, "Retirer"), m_ui_state)) {
-            m_manager->retireItem(item_info.item->id);
-            show = false;
-            m_workspace.save("retirer_objet");
-        }
-    };
-    Modals::getInstance().setModal("Voulez-vous retirer un objet ?", error_fct);
-}
-
-void ItemsListWidget::unretire_item(ItemInfos& item_info) {
-    m_manager->unretireItem(item_info.item->id);
-    m_workspace.save("restaurer_objet");
-}
-
 void ItemsListWidget::fill_items(bool default_sort) {
     m_items.clear();
     if (default_sort) {
@@ -158,52 +114,6 @@ void ItemsListWidget::show_row(ItemInfos& item_info) {
 
     ImGui::Indent(5.f);
 
-    // if (!item_info.is_new) {
-    //     button(labelize(item_info.id, "Notes"), m_ui_state, "", ImVec4(), true);
-    //     notes(item_info);
-
-    //     ImGui::SameLine();
-    //     button(labelize(item_info.id, "Actions"), m_ui_state, "", ImVec4(), true);
-    //     if (ImGui::IsItemHovered()) {
-    //         ImGui::BeginTooltip();
-    //         ImGui::Text("Pour retirer / supprimer / restaurer des objets / voir l'historique ...");
-    //         ImGui::EndTooltip();
-    //     }
-    //     if (ImGui::BeginPopupContextItem(0, ImGuiPopupFlags_MouseButtonLeft)) {
-    //         if (button(labelize(item_info.id, "Voir l'historique d'emprunts"), m_ui_state, "", ImVec4(), true)) {
-    //             show_history(item_info);
-    //         }
-    //         if (is_retired) {
-    //             if (button(labelize(item_info.id, "Restaurer"), m_ui_state)) {
-    //                 unretire_item(item_info);
-    //             }
-    //             ImGui::SameLine();
-    //             if (button(labelize(item_info.id, "Supprimer"), m_ui_state, "", ImVec4(0.8f, 0.1f, 0.1f, 0.7f))) {
-    //                 delete_item(item_info);
-    //             }
-    //         }
-    //         else {
-    //             if (button(labelize(item_info.id, "Retirer"), m_ui_state, "", ImVec4(0.8f, 0.1f, 0.1f, 0.7f))) {
-    //                 retire_item(item_info);
-    //             }
-    //             if (ImGui::IsItemHovered()) {
-    //                 ImGui::BeginTooltip();
-    //                 ImGui::Text(
-    //                     "L'action 'retirer' enlève un objet de la liste des objets empruntables.\n"
-    //                     "Cela ne supprime pas directement l'objet. Pour pouvoir supprimer un objet\n"
-    //                     "il faut d'abord le retirer puis le supprimer."
-    //                 );
-    //                 ImGui::EndTooltip();
-    //             }
-    //         }
-    //         ImGui::EndPopup();
-    //     }
-    // }
-    // else {
-    //     if (button(labelize(item_info.id, "Enlever"), m_ui_state)) {
-    //         m_to_remove.push_back(item_info);
-    //     }
-    // }
     if (is_retired) {
         ImGui::TableSetBgColor(
             ImGuiTableBgTarget_RowBg0 | ImGuiTableBgTarget_RowBg1,
