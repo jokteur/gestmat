@@ -2,6 +2,7 @@
 
 #include "ui/drawable.h"
 #include "ui/widgets/filter.h"
+#include "ui/widgets/date.h"
 #include "core/util.h"
 
 class ItemsState : public Drawable {
@@ -18,6 +19,11 @@ private:
 
     long long int m_sub_id;
 
+    std::string m_surname;
+    std::string m_name;
+    std::string m_place;
+    DateWidget m_birthday;
+
     CheckBoxMap<Item::LoanID> m_loans_checkbox;
 
     std::map<std::string,
@@ -26,6 +32,8 @@ private:
         Filter, Item::Loan_ptr>>>> m_loans;
 
     void give_back();
+
+    void edit_person(Item::Person_ptr person);
 
     void fill_items();
     void show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loan);

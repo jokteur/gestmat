@@ -9,7 +9,8 @@ void ItemsState::BeforeFrameUpdate() {
 
 
 ItemsState::ItemsState(UIState_ptr ui_state) :
-    Drawable(ui_state), m_filter(ui_state, "Rechercher (nom, prénom, date, infos objet, chambre, ...)") {
+    Drawable(ui_state), m_filter(ui_state, "Rechercher (nom, prénom, date, infos objet, chambre, ...)"),
+    m_birthday(ui_state) {
 }
 
 void ItemsState::fill_items() {
@@ -60,6 +61,71 @@ void ItemsState::fill_items() {
     }
 }
 
+void ItemsState::edit_person(Item::Person_ptr person) {
+    ImGui::GetItemID();
+    if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+        ImGui::Text("Double clic pour éditer nom, prénom, ...");
+        ImGui::EndTooltip();
+
+        if (ImGui::IsMouseDoubleClicked(0)) {
+            m_surname = person->surname;
+            m_name = person->name;
+            m_place = person->place;
+            m_birthday.setDate(
+                person->birthday.getDay(),
+                person->birthday.getMonth(),
+                person->birthday.getYear());
+
+            const modal_fct fct = [this, person](bool& show, bool&, bool&) {
+
+                Tempo::PushFont(m_ui_state->font_bold);
+                ImGui::Text("Informations sur patient");
+                Tempo::PopFont();
+
+                float pos_x = ImGui::GetCursorPosX();
+                float item_height = ImGui::GetTextLineHeightWithSpacing();
+                const float spacing = item_height * 6;
+
+                ImGui::Text("Nom:"); ImGui::SameLine();
+                ImGui::SetCursorPosX(pos_x + spacing);
+
+                ImGui::SetNextItemWidth(spacing);
+                ImGui::InputText("##in_surname", &m_surname);
+
+                ImGui::Text("Prénom:"); ImGui::SameLine();
+                ImGui::SetCursorPosX(pos_x + spacing);
+                ImGui::SetNextItemWidth(spacing);
+                ImGui::InputText("##in_name", &m_name);
+
+                ImGui::Text("Date de naissance:"); ImGui::SameLine();
+                ImGui::SetCursorPosX(pos_x + spacing);
+                m_birthday.FrameUpdate();
+
+                ImGui::Text("Unité/chambre:"); ImGui::SameLine();
+                ImGui::SetCursorPosX(pos_x + spacing);
+                ImGui::SetNextItemWidth(spacing);
+                ImGui::InputText("##in_place", &m_place);
+
+                if (button("Annuler", m_ui_state)) {
+                    show = false;
+                }
+                ImGui::SameLine();
+                if (button("Sauvegarder", m_ui_state)) {
+                    show = false;
+                    person->birthday = m_birthday.getDate();
+                    person->surname = m_surname;
+                    person->name = m_name;
+                    person->place = m_place;
+                    m_workspace.save("editer_personne");
+                }
+            };
+
+            Modals::getInstance().setModal("Éditer la personne", fct);
+        }
+    }
+}
+
 
 void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) {
     ImGui::TableNextRow();
@@ -70,15 +136,19 @@ void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) 
     // std::cout << person->name << std::endl;
     ImGui::TableSetColumnIndex(SURNAME);
     ImGui::Text(person->surname.c_str());
+    edit_person(person);
 
     ImGui::TableSetColumnIndex(NAME);
     ImGui::Text(person->name.c_str());
+    edit_person(person);
 
     ImGui::TableSetColumnIndex(BIRTHDAY);
     ImGui::Text(person->birthday.format("%d/%m/%Y").c_str());
+    edit_person(person);
 
     ImGui::TableSetColumnIndex(PLACE);
     ImGui::Text(person->place.c_str());
+    edit_person(person);
 
     ImGui::TableSetColumnIndex(NOTES);
     for (auto& note : person->notes) {

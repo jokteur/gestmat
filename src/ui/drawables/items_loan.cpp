@@ -1,6 +1,7 @@
 #include "items_loan.h"
 
 #include "ui/widgets/misc.h"
+#include "ui/widgets/modal.h"
 #include "ui/imgui_util.h"
 #include "imgui_stdlib.h"
 #include "imgui_internal.h"
