@@ -83,7 +83,7 @@ void SelectItemWidget::show_row(Item::ItemID item_id, Item::Category_ptr cat) {
                 selectable_flags);
         }
         else
-            ImGui::Text(item->property_values[prop_id].c_str());
+            ImGui::TextWrapped(item->property_values[prop_id].c_str());
         if (!item->notes.empty() && ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
             show_notes(item);
