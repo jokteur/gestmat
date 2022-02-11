@@ -6,9 +6,9 @@ void MenuBar::FrameUpdate() {
     if (ImGui::BeginMenu("Fichiers")) {
         ImGui::EndMenu();
     }
-    if (ImGui::Button("show_demo")) {
-        demo = true;
-    }
+    // if (ImGui::Button("show_demo")) {
+    //     demo = true;
+    // }
     // ImGui::ShowDemoWindow(&demo);
     float width = ImGui::GetContentRegionAvail().x;
 

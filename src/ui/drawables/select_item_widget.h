@@ -6,6 +6,7 @@
 
 #include "core/util.h"
 #include "ui/widgets/combo.h"
+#include "ui/widgets/filter.h"
 
 using namespace core;
 
@@ -25,13 +26,18 @@ private:
     long long int m_id;
 
     std::map<std::string, std::vector<Item::ItemID>> m_items_list;
+    CheckBoxMap<Item::ItemID> m_item_selected_map;
     bool m_ascending = true;
     bool m_fill_cols = true;
     bool m_include_loaned = false;
     int m_sort_col_id = 0;
 
+    FilterWidget m_filter;
+    std::map<Item::ItemID, Filter> m_filter_infos;
+
     void setCategories();
 
+    void show_notes(Item::Item_ptr item);
     void show_row(Item::ItemID item_id, Item::Category_ptr cat);
     void fill_items(Item::Category_ptr cat);
     void show_items(Item::CategoryID cat_id);

@@ -2,7 +2,7 @@
 #include "ui/widgets/misc.h"
 #include "ui/imgui_util.h"
 
-SelectItemWidget::SelectItemWidget(UIState_ptr ui_state) : Drawable(ui_state) {
+SelectItemWidget::SelectItemWidget(UIState_ptr ui_state) : Drawable(ui_state), m_filter(ui_state, "Rechercher") {
     m_manager = m_workspace.getCurrentManager();
     m_id = m_ui_state->imID;
     m_ui_state->imID++;
@@ -33,6 +33,20 @@ void SelectItemWidget::BeforeFrameUpdate() {
     }
 }
 
+void SelectItemWidget::show_notes(Item::Item_ptr item) {
+    ImGui::Text("Notes sur l'objet:");
+    ImGui::Indent(20.f);
+    for (auto it = item->notes.rbegin();it != item->notes.rend();it++) {
+        Tempo::PushFont(m_ui_state->font_bold);
+        timestampToText(it->timestamp);
+        Tempo::PopFont();
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text(it->content.c_str());
+        ImGui::Separator();
+    }
+    ImGui::Unindent(20.f);
+}
+
 void SelectItemWidget::show_row(Item::ItemID item_id, Item::Category_ptr cat) {
     auto item = m_manager->getItem(item_id).value();
 
@@ -43,14 +57,14 @@ void SelectItemWidget::show_row(Item::ItemID item_id, Item::Category_ptr cat) {
     if (m_avoid_items.contains(item_id))
         return;
 
+
+    if (!m_filter.PassFilter(m_filter_infos[item_id]))
+        return;
+
     ImGui::TableNextRow();
-    ImGui::TableSetColumnIndex(0);
-    if (button(labelize(item->id, "Choisir"), m_ui_state)) {
-        m_item_id = item_id;
-    }
-    int extra_cols = m_include_loaned ? 2 : 1;
+    int extra_cols = m_include_loaned ? 1 : 0;
     if (m_include_loaned) {
-        ImGui::TableSetColumnIndex(1);
+        ImGui::TableSetColumnIndex(0);
         if (is_loaned)
             ImGui::Text("Oui");
         else
@@ -61,13 +75,31 @@ void SelectItemWidget::show_row(Item::ItemID item_id, Item::Category_ptr cat) {
         if (cat->properties_hide.contains(prop_id))
             continue;
         ImGui::TableSetColumnIndex(j);
-        ImGui::Text(item->property_values[prop_id].c_str());
+        if (j == extra_cols) {
+            ImGuiSelectableFlags selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
+            ImGui::Selectable(
+                labelize(prop_id, item->property_values[prop_id], item->id).c_str(),
+                &m_item_selected_map[item->id],
+                selectable_flags);
+        }
+        else
+            ImGui::Text(item->property_values[prop_id].c_str());
+        if (!item->notes.empty() && ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            show_notes(item);
+            ImGui::EndTooltip();
+        }
         j++;
+    }
+    for (auto pair : m_item_selected_map) {
+        if (pair.second)
+            m_item_id = pair.first;
     }
 }
 
 void SelectItemWidget::fill_items(Item::Category_ptr cat) {
     m_items_list.clear();
+    m_filter_infos.clear();
 
     Item::PropertyID prop_id = -1;
     int j = 0;
@@ -88,12 +120,22 @@ void SelectItemWidget::fill_items(Item::Category_ptr cat) {
     for (auto item_id : cat->registered_items) {
         auto item = m_manager->getItem(item_id).value();
         m_items_list[item->property_values[prop_id]].push_back(item_id);
+        for (auto prop_id3 : cat->properties) {
+            if (cat->properties_hide.contains(prop_id3))
+                continue;
+            m_filter_infos[item_id].insert(
+                core::toLower(item->property_values[prop_id3]));
+        }
     }
 }
 
 void SelectItemWidget::show_items(Item::CategoryID cat_id) {
     if (cat_id == -1)
         return;
+
+
+    m_filter.FrameUpdate();
+
 
     auto cat = m_manager->getCategory(cat_id).value();
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
@@ -106,14 +148,14 @@ void SelectItemWidget::show_items(Item::CategoryID cat_id) {
         | ImGuiTableFlags_SizingStretchProp;
 
 
-    int extra_cols = 1;
+    int extra_cols = 0;
     if (m_include_loaned)
-        extra_cols = 2;
+        extra_cols = 1;
     if (ImGui::BeginTable(
         labelize(m_id, "Loan table", cat->id).c_str(),
         (int)cat->properties.size() + extra_cols, flags
     )) {
-        ImGui::TableSetupColumn("Actions", ImGuiTableColumnFlags_NoSort);
+        // ImGui::TableSetupColumn("Actions", ImGuiTableColumnFlags_NoSort);
         if (m_include_loaned)
             ImGui::TableSetupColumn("Emprunté?", ImGuiTableColumnFlags_NoSort);
         int i = extra_cols;
@@ -203,7 +245,7 @@ void SelectItemWidget::FrameUpdate() {
     }
     else {
         ImGui::AlignTextToFramePadding();
-        ImGui::Text("Catégorie:");
+        ImGui::Text("Choississez une catégorie:");
         ImGui::SameLine();
         float item_height = ImGui::GetTextLineHeightWithSpacing();
         const float spacing = item_height * 6;
@@ -211,10 +253,12 @@ void SelectItemWidget::FrameUpdate() {
         if (m_cat_combo != nullptr) {
             m_cat_combo->FrameUpdate();
             std::string select = m_cat_combo->getValue();
+            ImGui::Indent(40.f);
             if (!select.empty()) {
                 ImGui::Checkbox(labelize(m_id, "Montrer objets empruntés##show_all").c_str(), &m_include_loaned);
                 show_items(m_categories[select]);
             }
+            ImGui::Unindent(40.f);
         }
     }
 }
