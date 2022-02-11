@@ -7,9 +7,9 @@ void MenuBar::FrameUpdate() {
         ImGui::EndMenu();
     }
     if (ImGui::Button("show_demo")) {
-        demo = !demo;
+        demo = true;
     }
-    ImGui::ShowDemoWindow(&demo);
+    // ImGui::ShowDemoWindow(&demo);
     float width = ImGui::GetContentRegionAvail().x;
 
     float button_width = ImGui::CalcTextSize("Historique").x;

@@ -15,7 +15,10 @@ ItemsListWidget::ItemsListWidget(UIState_ptr ui_state, Item::CategoryID cat_id) 
     }
     change_id();
 }
-
+ItemsListWidget::~ItemsListWidget() {
+    m_workspace.getCurrentManager()->giveBackId(m_sub_id);
+    Tempo::EventQueue::getInstance().unsubscribe(&m_listener);
+}
 void ItemsListWidget::save() {
     for (auto& pair : m_items) {
         auto& items = pair.second;
@@ -36,63 +39,6 @@ void ItemsListWidget::save() {
 void ItemsListWidget::change_id() {
     m_ui_state->imID++;
     m_table_id = m_ui_state->imID;
-}
-
-void ItemsListWidget::notes(ItemInfos& item_info) {
-    ImGui::SetNextItemWidth(300.f);
-    if (ImGui::BeginPopupContextItem(0, ImGuiPopupFlags_MouseButtonLeft)) {
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 8));
-        ImVec4 color = ImVec4(0.9f, 0.9f, 0.9f, 0.9f);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(color.x, color.y, color.z, color.w));
-
-        auto item = item_info.item;
-        std::set<Item::NoteID> to_remove;
-        for (auto it = item->notes.rbegin();it != item->notes.rend();it++) {
-            Tempo::PushFont(m_ui_state->font_bold);
-            timestampToText(it->timestamp);
-            Tempo::PopFont();
-            ImGui::AlignTextToFramePadding();
-            ImGui::Text(it->content.c_str());
-            ImGui::SameLine();
-            if (button(labelize(it->id, "-"), m_ui_state)) {
-                to_remove.insert(it->id);
-            }
-            ImGui::Separator();
-        }
-        for (auto it = item->notes.begin();it != item->notes.end();it++) {
-            if (to_remove.contains(it->id)) {
-                item->notes.erase(it);
-                m_workspace.save("enlever_note");
-                break;
-            }
-        }
-        if (button("+##new_note_plus", m_ui_state)) {
-            m_new_note = true;
-            m_note = "";
-        }
-        if (m_new_note) {
-            ImGui::InputTextMultiline("##new_note_input", &m_note);
-            if (button("Annuler##new_note_cancel", m_ui_state)) {
-                m_new_note = false;
-            }
-            ImGui::SameLine();
-            if (button("Ajouter##new_note_add", m_ui_state)) {
-                if (!m_note.empty()) {
-                    Item::Note note{
-                        .content = m_note,
-                        .timestamp = getTimestamp()
-                    };
-                    item->notes.push_back(note);
-                }
-                m_note = "";
-                m_new_note = false;
-                m_workspace.save("ajouter_note");
-            }
-        }
-        ImGui::PopStyleVar();
-        ImGui::PopStyleColor();
-        ImGui::EndPopup();
-    }
 }
 
 void ItemsListWidget::add_empty_item() {
@@ -206,55 +152,58 @@ void ItemsListWidget::show_row(ItemInfos& item_info) {
     auto retired_bg = ImGui::GetColorU32(ImVec4(0.4f, 0.4f, 0.4f, 0.4f));
 
     // Actions column
-    ImGui::TableSetColumnIndex(0);
+    // ImGui::TableSetColumnIndex(0);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3);
 
 
     ImGui::Indent(5.f);
 
-    if (!item_info.is_new) {
-        button(labelize(item_info.id, "Notes"), m_ui_state);
-        notes(item_info);
+    // if (!item_info.is_new) {
+    //     button(labelize(item_info.id, "Notes"), m_ui_state, "", ImVec4(), true);
+    //     notes(item_info);
 
-        ImGui::SameLine();
-        button(labelize(item_info.id, "Actions"), m_ui_state);
-        if (ImGui::IsItemHovered()) {
-            ImGui::BeginTooltip();
-            ImGui::Text("Pour retirer / supprimer / restaurer des objets");
-            ImGui::EndTooltip();
-        }
-        if (ImGui::BeginPopupContextItem(0, ImGuiPopupFlags_MouseButtonLeft)) {
-            if (is_retired) {
-                if (button(labelize(item_info.id, "Restaurer"), m_ui_state)) {
-                    unretire_item(item_info);
-                }
-                ImGui::SameLine();
-                if (button(labelize(item_info.id, "Supprimer"), m_ui_state, "", ImVec4(0.8f, 0.1f, 0.1f, 0.7f))) {
-                    delete_item(item_info);
-                }
-            }
-            else {
-                if (button(labelize(item_info.id, "Retirer"), m_ui_state, "", ImVec4(0.8f, 0.1f, 0.1f, 0.7f))) {
-                    retire_item(item_info);
-                }
-                if (ImGui::IsItemHovered()) {
-                    ImGui::BeginTooltip();
-                    ImGui::Text(
-                        "L'action 'retirer' enlève un objet de la liste des objets empruntables.\n"
-                        "Cela ne supprime pas directement l'objet. Pour pouvoir supprimer un objet\n"
-                        "il faut d'abord le retirer puis le supprimer."
-                    );
-                    ImGui::EndTooltip();
-                }
-            }
-            ImGui::EndPopup();
-        }
-    }
-    else {
-        if (button(labelize(item_info.id, "Enlever"), m_ui_state)) {
-            m_to_remove.push_back(item_info);
-        }
-    }
+    //     ImGui::SameLine();
+    //     button(labelize(item_info.id, "Actions"), m_ui_state, "", ImVec4(), true);
+    //     if (ImGui::IsItemHovered()) {
+    //         ImGui::BeginTooltip();
+    //         ImGui::Text("Pour retirer / supprimer / restaurer des objets / voir l'historique ...");
+    //         ImGui::EndTooltip();
+    //     }
+    //     if (ImGui::BeginPopupContextItem(0, ImGuiPopupFlags_MouseButtonLeft)) {
+    //         if (button(labelize(item_info.id, "Voir l'historique d'emprunts"), m_ui_state, "", ImVec4(), true)) {
+    //             show_history(item_info);
+    //         }
+    //         if (is_retired) {
+    //             if (button(labelize(item_info.id, "Restaurer"), m_ui_state)) {
+    //                 unretire_item(item_info);
+    //             }
+    //             ImGui::SameLine();
+    //             if (button(labelize(item_info.id, "Supprimer"), m_ui_state, "", ImVec4(0.8f, 0.1f, 0.1f, 0.7f))) {
+    //                 delete_item(item_info);
+    //             }
+    //         }
+    //         else {
+    //             if (button(labelize(item_info.id, "Retirer"), m_ui_state, "", ImVec4(0.8f, 0.1f, 0.1f, 0.7f))) {
+    //                 retire_item(item_info);
+    //             }
+    //             if (ImGui::IsItemHovered()) {
+    //                 ImGui::BeginTooltip();
+    //                 ImGui::Text(
+    //                     "L'action 'retirer' enlève un objet de la liste des objets empruntables.\n"
+    //                     "Cela ne supprime pas directement l'objet. Pour pouvoir supprimer un objet\n"
+    //                     "il faut d'abord le retirer puis le supprimer."
+    //                 );
+    //                 ImGui::EndTooltip();
+    //             }
+    //         }
+    //         ImGui::EndPopup();
+    //     }
+    // }
+    // else {
+    //     if (button(labelize(item_info.id, "Enlever"), m_ui_state)) {
+    //         m_to_remove.push_back(item_info);
+    //     }
+    // }
     if (is_retired) {
         ImGui::TableSetBgColor(
             ImGuiTableBgTarget_RowBg0 | ImGuiTableBgTarget_RowBg1,
@@ -266,7 +215,7 @@ void ItemsListWidget::show_row(ItemInfos& item_info) {
 
     auto& values = item_info.values;
 
-    for (int column = 1;column <= m_category->properties.size();column++) {
+    for (int column = 0;column < m_category->properties.size();column++) {
         ImGui::TableSetColumnIndex(column);
         if (is_retired) {
             ImGui::TableSetBgColor(
@@ -274,7 +223,8 @@ void ItemsListWidget::show_row(ItemInfos& item_info) {
                 retired_bg
             );
         }
-        auto prop_id = m_category->properties[column - 1];
+
+        auto prop_id = m_category->properties[column];
         auto prop = m_manager->getProperty(prop_id).value();
 
         // For new items
@@ -298,41 +248,23 @@ void ItemsListWidget::show_row(ItemInfos& item_info) {
                 item_info.values[prop_id] = item_info.select[prop_id]->getValue();
             }
         }
-        else
-            ImGui::TextWrapped(values[prop_id].c_str());
-    }
-}
-
-void ItemsListWidget::show_history(ItemInfos& item_info) {
-    const modal_fct error_fct = [this, &item_info](bool& show, bool&, bool&) {
-        auto retired_loans = m_manager->findRetiredLoans(item_info.id);
-        auto loans = m_manager->findLoans(item_info.id);
-        if (!retired_loans.has_value()) {
-            ImGui::Text("Aucun emprunt trouvé");
-        }
         else {
-            for (auto loan_id : retired_loans.value()) {
-                auto loan = m_manager->getLoan(loan_id).value();
-                auto person = m_manager->getPerson(loan->person).value();
-                Tempo::PushFont(m_ui_state->font_bold);
-                ImGui::Text((person->surname + " " + person->name).c_str());
-                Tempo::PopFont();
-                ImGui::SameLine();
-                std::string txt = ", " + person->birthday.format("%d/%m/%Y");
-                txt += ", " + person->place;
-                ImGui::Text(txt.c_str());
-                ImGui::Indent(40.f);
-                ImGui::Text(("Emprunté le " + loan->date.format("%d/%m/%Y")).c_str());
-                ImGui::Text(("Rendu le " + loan->date_back.format("%d/%m/%Y")).c_str());
-                ImGui::Unindent(40.f);
+            ImGuiSelectableFlags selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
+            if (column == 0) {
+                if (ImGui::Selectable(
+                    labelize(prop_id, values[prop_id], item_info.item->id).c_str(),
+                    m_item_selected_map[item_info.item],
+                    selectable_flags)) {
+
+                    m_item_selected_map.clear();
+                    m_item_selected_map[item_info.item] = true;
+                    m_selected_item = item_info.item;
+                }
             }
+            else
+                ImGui::TextWrapped(values[prop_id].c_str());
         }
-        if (button(labelize(item_info.id, "OK"), m_ui_state)) {
-            show = false;
-        }
-    };
-    ImGui::SetNextWindowContentSize(ImVec2(800.f, 600.f));
-    Modals::getInstance().setModal("Historique de l'objet", error_fct);
+    }
 }
 
 void ItemsListWidget::FrameUpdate() {
@@ -390,13 +322,12 @@ void ItemsListWidget::FrameUpdate() {
         m_new_items.clear();
     }
 
-    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 2));
     ImGui::PushStyleColor(ImGuiCol_FrameBg, 0);
 
     if (m_edit_mode) {
-        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
     }
     const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeight();
@@ -408,15 +339,15 @@ void ItemsListWidget::FrameUpdate() {
         // ImVec2(0.f, TEXT_BASE_HEIGHT * (float)num_rows)
     )) {
 
-        int i = 1;
-        ImGui::TableSetupColumn(
-            labelize(m_cat_id, "Actions").c_str(),
-            ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort,
-            135.f);
+        int i = 0;
+        // ImGui::TableSetupColumn(
+        //     labelize(m_cat_id, "Actions").c_str(),
+        //     ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoSort,
+        //     135.f);
 
         for (auto prop_id : m_category->properties) {
             int col_flags = 0;
-            if (i == 1) {
+            if (i == 0) {
                 col_flags |= ImGuiTableColumnFlags_DefaultSort;
             }
             std::string name = m_properties[prop_id]->name;
@@ -433,7 +364,7 @@ void ItemsListWidget::FrameUpdate() {
         if (ImGuiTableSortSpecs* sorts_specs = ImGui::TableGetSortSpecs()) {
             if (sorts_specs->SpecsDirty) {
                 m_ascending = sorts_specs->Specs->SortDirection == ImGuiSortDirection_Ascending ? true : false;
-                m_sort_col_id = sorts_specs->Specs->ColumnIndex - 1;
+                m_sort_col_id = sorts_specs->Specs->ColumnIndex;
                 m_fill_cols = true;
                 sorts_specs->SpecsDirty = false;
             }
@@ -469,7 +400,7 @@ void ItemsListWidget::FrameUpdate() {
         ImGui::EndTable();
     }
     if (m_edit_mode) {
-        ImGui::PopStyleVar(2);
+        ImGui::PopStyleVar();
     }
     ImGui::PopStyleVar(3);
     ImGui::PopStyleColor();
@@ -480,4 +411,17 @@ void ItemsListWidget::BeforeFrameUpdate() {
     for (auto& item_info : m_to_remove) {
         remove_new_item(item_info);
     }
+}
+
+void ItemsListWidget::unselectedItem() {
+    m_item_selected_map.clear();
+}
+
+Item::Item_ptr ItemsListWidget::clickedOnItem() {
+    if (m_selected_item != nullptr) {
+        auto tmp = m_selected_item;
+        m_selected_item = nullptr;
+        return tmp;
+    }
+    return nullptr;
 }

@@ -4,6 +4,7 @@
 
 #include "ui/drawable.h"
 #include "ui/widgets/combo.h"
+#include "ui/widgets/misc.h"
 
 using namespace core;
 
@@ -22,6 +23,8 @@ private:
     Item::Manager_ptr m_manager;
     Item::Category_ptr m_category = nullptr;
 
+    Tempo::Listener m_listener;
+
     bool m_destroy = false;
 
     bool m_first_created = true;
@@ -32,8 +35,13 @@ private:
     int m_sort_col_id = 0;
     bool m_ascending = true;
 
+    // For individual selection of items
+    Item::Item_ptr m_selected_item = nullptr;
+
     long long int m_sub_id;
     long long int m_table_id;
+
+    CheckBoxMap<Item::Item_ptr> m_item_selected_map;
 
     std::map<Item::PropertyID, Item::Property_ptr> m_properties;
 
@@ -46,7 +54,6 @@ private:
 
     void save();
 
-    void notes(ItemInfos& item_info);
 
     void add_empty_item();
 
@@ -66,12 +73,15 @@ private:
 
     void show_row(ItemInfos& item_info);
 
-    void show_history(ItemInfos& item_info);
 
 public:
     ItemsListWidget(UIState_ptr ui_state, Item::CategoryID cat_id = -1);
     void FrameUpdate() override;
     void BeforeFrameUpdate() override;
 
-    ~ItemsListWidget() { m_workspace.getCurrentManager()->giveBackId(m_sub_id); }
+    void unselectedItem();
+    Item::Item_ptr clickedOnItem();
+    bool getEditMode() { return m_edit_mode; }
+
+    ~ItemsListWidget();
 };

@@ -5,6 +5,21 @@
 #include "ui/widgets/modal.h"
 #include "imgui_stdlib.h"
 
+ItemsManagement::ItemsManagement(UIState_ptr ui_state) : Drawable(ui_state), m_show_item_widget(ui_state) {
+    m_listener.filter = "change_manager";
+    m_listener.callback = [this](Tempo::Event_ptr event) {
+        m_manager = m_workspace.getCurrentManager();
+        m_cat_widgets.clear();
+        m_items_widgets.clear();
+    };
+
+    Tempo::EventQueue::getInstance().subscribe(&m_listener);
+}
+ItemsManagement::~ItemsManagement() {
+
+    Tempo::EventQueue::getInstance().unsubscribe(&m_listener);
+}
+
 void ItemsManagement::BeforeFrameUpdate() {
     std::set<Item::CategoryID> to_destroy;
     for (auto& pair : m_cat_widgets) {
@@ -51,6 +66,8 @@ void ItemsManagement::show_cat(Item::CategoryID cat_id, Item::Category_ptr cat) 
             if (!is_retired) {
                 if (button(labelize(cat_id, "Éditer"), m_ui_state)) {
                     m_cat_widgets[cat_id] = std::make_shared<CategoryWidget>(m_ui_state, cat_id);
+                    m_items_widgets[cat_id]->unselectedItem();
+                    m_show_item_widget.close();
                 }
                 ImGui::SameLine();
                 if (button(labelize(cat_id, "Retirer"), m_ui_state, "", ImVec4(0.7f, 0.2f, 0.2f, 0.4f))) {
@@ -131,7 +148,23 @@ void ItemsManagement::show_cat(Item::CategoryID cat_id, Item::Category_ptr cat) 
             if (!m_items_widgets.contains(cat_id)) {
                 m_items_widgets[cat_id] = std::make_shared<ItemsListWidget>(m_ui_state, cat_id);
             }
+            if (m_items_widgets[cat_id]->getEditMode()) {
+                m_show_item_widget.close();
+                m_unselect_all = true;
+            }
             m_items_widgets[cat_id]->FrameUpdate();
+            auto item = m_items_widgets[cat_id]->clickedOnItem();
+            if (item != nullptr) {
+                for (auto widget : m_items_widgets) {
+                    if (widget.first == cat_id)
+                        continue;
+                    widget.second->unselectedItem();
+                }
+                m_show_item_widget.setItem(item);
+            }
+            if (m_unselect_all) {
+                m_items_widgets[cat_id]->unselectedItem();
+            }
             ImGui::Unindent(40.f);
         }
     }
@@ -145,8 +178,19 @@ void ItemsManagement::show_cat(Item::CategoryID cat_id, Item::Category_ptr cat) 
     }
 }
 
+const float proportion = 0.7f;
+
 void ItemsManagement::FrameUpdate() {
     m_manager = m_workspace.getCurrentManager();
+
+    float height = ImGui::GetContentRegionAvail().y;
+
+    ImVec2 size;
+    if (m_show_item_widget.isOpen()) {
+        size.y = proportion * height;
+    }
+    ImGui::BeginChild("item_management", size);
+
     title("Catégories d'objets", m_ui_state);
     ImGui::SameLine();
     if (button("+##new_cat", m_ui_state)) {
@@ -171,7 +215,16 @@ void ItemsManagement::FrameUpdate() {
             show_cat(cat_id, cat);
         }
     }
-
     ImGui::Separator();
     ImGui::Checkbox("Afficher les catégories retirées", &m_show_retired_cats);
+    ImGui::EndChild();
+
+    m_show_item_widget.BeforeFrameUpdate();
+    m_unselect_all = m_show_item_widget.justClosed();
+
+    if (m_show_item_widget.isOpen()) {
+        ImGui::BeginChild("show_item", ImVec2(0, height * (1 - proportion - 0.01f)), true);
+        m_show_item_widget.FrameUpdate();
+        ImGui::EndChild();
+    }
 }

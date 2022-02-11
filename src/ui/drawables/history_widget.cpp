@@ -113,6 +113,9 @@ void HistoryWidget::FrameUpdate() {
                     m_manager = m_workspace.getCurrentManager();
 
                 std::string err = m_workspace.loadIntoCurrent(file.path);
+
+                Tempo::EventQueue::getInstance().post(std::make_shared<Tempo::Event>("change_manager"));
+
                 if (err.empty()) {
                     m_visualize = true;
                     m_ui_state->read_only = true;
@@ -236,6 +239,7 @@ void HistoryWidget::abandon() {
     m_show = false;
     m_current_file = nullptr;
     m_ui_state->read_only = false;
+    Tempo::EventQueue::getInstance().post(std::make_shared<Tempo::Event>("change_manager"));
     m_workspace.setCurrentManager(m_manager);
 }
 
