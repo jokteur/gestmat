@@ -104,7 +104,9 @@ file (GLOB source_list RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 
 #Date
 
-add_executable(${PROJECT_NAME} ${source_list} src/main.cpp)
+set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/data/icon.rc")
+
+add_executable(${PROJECT_NAME} ${source_list} src/main.cpp ${APP_ICON_RESOURCE_WINDOWS})
 target_link_libraries(${PROJECT_NAME} PRIVATE zlib nlohmann_json Tempo ${Python_LIBRARIES})
 
 # Copy the data (such as fonts) in build directory
