@@ -118,6 +118,8 @@ void SelectItemWidget::fill_items(Item::Category_ptr cat) {
     auto prop = m_manager->getProperty(prop_id).value();
 
     for (auto item_id : cat->registered_items) {
+        if (m_manager->isRetired(item_id).value())
+            continue;
         auto item = m_manager->getItem(item_id).value();
         m_items_list[item->property_values[prop_id]].push_back(item_id);
         for (auto prop_id3 : cat->properties) {
