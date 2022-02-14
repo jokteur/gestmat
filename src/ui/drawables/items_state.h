@@ -24,6 +24,8 @@ private:
     std::string m_place;
     DateWidget m_birthday;
 
+    Tempo::Listener m_listener;
+
     CheckBoxMap<Item::LoanID> m_loans_checkbox;
 
     std::map<std::string,
@@ -39,6 +41,7 @@ private:
     void show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loan);
 public:
     ItemsState(UIState_ptr ui_state);
+    ~ItemsState();
 
     void FrameUpdate() override;
     void BeforeFrameUpdate() override;

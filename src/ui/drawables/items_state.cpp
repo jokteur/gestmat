@@ -11,6 +11,15 @@ void ItemsState::BeforeFrameUpdate() {
 ItemsState::ItemsState(UIState_ptr ui_state) :
     Drawable(ui_state), m_filter(ui_state, "Rechercher (nom, prénom, date, infos objet, chambre, ...)"),
     m_birthday(ui_state) {
+    m_listener.filter = "change_manager";
+    m_listener.callback = [this](Tempo::Event_ptr event) {
+        m_manager = m_workspace.getCurrentManager();
+        m_sub_id = m_manager->getId();
+    };
+    Tempo::EventQueue::getInstance().subscribe(&m_listener);
+}
+ItemsState::~ItemsState() {
+    Tempo::EventQueue::getInstance().unsubscribe(&m_listener);
 }
 
 void ItemsState::fill_items() {
