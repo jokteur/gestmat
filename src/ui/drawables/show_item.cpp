@@ -107,9 +107,10 @@ void ShowItem::person_widget(Item::Person_ptr person) {
 void ShowItem::show_history() {
     auto retired_loans = m_manager->findRetiredLoans(m_item->id);
     auto loans = m_manager->findLoans(m_item->id);
-    if (loans.has_value()) {
+    if (loans.has_value() && loans.value().size()) {
         ImGui::Text("Actuellement en emprunt chez");
         ImGui::SameLine();
+
         auto it = loans.value().begin();
         auto loan = m_manager->getLoan(*it).value();
         auto person = m_manager->getPerson(loan->person).value();

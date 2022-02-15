@@ -100,6 +100,18 @@ namespace core {
             return std::optional<bool>();
         }
 
+        void Manager::cleanUp() {
+            std::set<ItemID> to_delete;
+            for (auto pair : m_item_loan_map) {
+                if (pair.second.empty()) {
+                    to_delete.insert(pair.first);
+                }
+            }
+            for (auto item_id : to_delete) {
+                m_item_loan_map.erase(item_id);
+            }
+        }
+
         std::set<CategoryID> Manager::getAllCategories() {
             std::set<CategoryID> set;
             for (auto cat_pair : m_registered_categories) {

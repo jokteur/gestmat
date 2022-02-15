@@ -87,6 +87,7 @@ void MainApp::FrameUpdate() {
         ImGui::ShowDemoWindow(&m_open);
 }
 void MainApp::BeforeFrameUpdate() {
+    m_menubar->BeforeFrameUpdate();
     switch (ui_state->active_panel) {
     case UIState::LOAN:
         m_loans->BeforeFrameUpdate();

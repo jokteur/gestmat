@@ -10,7 +10,7 @@
 
 
 using namespace core;
-// #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 int main() {
     PyAPI::Handler::getInstance();
 

@@ -18,7 +18,7 @@ void NavBar::FrameUpdate() {
             m_ui_state->active_panel = UIState::MANAGEMENT;
         ImGui::EndTabItem();
     }
-    if (ImGui::BeginTabItem("Alertes matériel")) {
+    if (ImGui::BeginTabItem("Statistiques")) {
         m_ui_state->active_panel = UIState::ALERTES;
         ImGui::EndTabItem();
     }

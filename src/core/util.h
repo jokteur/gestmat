@@ -45,6 +45,8 @@ namespace core {
 
         NLOHMANN_DEFINE_TYPE_INTRUSIVE(Date, day, month, year, is_valid);
 
+        friend int getDifference(Date date_start, Date date_end);
+
         uint8_t getDay() { return day; }
         uint8_t getMonth() { return month; }
         uint16_t getYear() { return year; }
@@ -54,6 +56,37 @@ namespace core {
     };
 
     Date getCurrentDate();
+
+
+    enum Duration {
+        ONE_WEEK,
+        TWO_WEEKS,
+        THREE_WEEKS,
+        ONE_MONTH,
+        TWO_MONTHS,
+        THREE_MONTHS,
+        FOUR_MONTHS,
+        FIVE_MONTHS,
+        SIX_MONTHS,
+        SEVEN_MONTHS,
+        HEIGHT_MONTHS,
+        NINE_MONTHS,
+        TEN_MONTHS,
+        ELEVEN_MONTHS,
+        ONE_YEAR
+    };
+
+    int day_of_year(int y, int m, int d);
+
+    int day_of_week(int y, int m, int d);
+
+    std::map<Duration, std::string> getDurations();
+
+    int getDifference(Date date_start, Date date_end);
+
+    bool isLessThanDuration(Duration duration, Date date_start, Date date_end = Date());
+
+    std::string durationToText(Duration duration);
 
     std::string toLower(const std::string& str);
 

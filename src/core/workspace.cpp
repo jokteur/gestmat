@@ -128,6 +128,10 @@ namespace core {
             manager->m_item_loan_map = j["item_loan_map"];
             manager->m_person_loan_map = j["person_loan_map"];
 
+            if (j.contains("alert_duration")) {
+                manager->m_duration_before_alert = j["alert_duration"];
+            }
+
             int loan_maps = 0;
             if (j.contains("past_item_loan_map")) {
                 loan_maps++;
@@ -207,8 +211,10 @@ namespace core {
             try {
                 Manager_ptr manager = std::make_shared<Manager>();
                 ret = _load(path, manager);
-                if (ret.empty())
+                if (ret.empty()) {
                     m_current_manager = manager;
+                    manager->cleanUp();
+                }
                 else
                     return std::string("Failed to load file: ") + ret;
             }
@@ -233,6 +239,7 @@ namespace core {
             out_file["person_loan_map"] = manager->m_person_loan_map;
             out_file["past_item_loan_map"] = manager->m_past_item_loan_map;
             out_file["past_person_loan_map"] = manager->m_past_person_loan_map;
+            out_file["alert_duration"] = manager->m_duration_before_alert;
 
             // Items
             for (auto& pair : manager->m_registered_items) {
@@ -285,7 +292,8 @@ namespace core {
 
             bool ret = false;
             ret = _save(_get_dir_path() + "\\" + filename, out_str, m_compression);
-            ret &= _save(m_docs_dir + "\\" + filename, out_str, m_compression);
+            ret &= _save(m_docs_dir + "\\" + DIR_NAME + "\\" + filename, out_str, m_compression);
+            std::cout << m_docs_dir << std::endl;
 
             manager->setChange();
 

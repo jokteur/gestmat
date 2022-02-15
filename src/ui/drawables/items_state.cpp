@@ -139,7 +139,11 @@ void ItemsState::edit_person(Item::Person_ptr person) {
 void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) {
     ImGui::TableNextRow();
 
-    // std::cout << loans.size() << std::endl;
+    // if (ImGui::TableGetRowIndex() % 2)
+    // else
+    //     ImGui::TableSetBgColor();
+
+        // std::cout << loans.size() << std::endl;
 
     auto person = m_manager->getPerson(loans[0].second->person).value();
     // std::cout << person->name << std::endl;
@@ -189,6 +193,7 @@ void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) 
     i = 0;
 
     ImGui::TableSetColumnIndex(TYPE);
+    auto duration = m_manager->getDuration();
     for (auto loan_pair : loans) {
         auto loan = loan_pair.second;
         if (!pass_filter[loan])
@@ -217,7 +222,22 @@ void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) 
         }
         ImGui::SameLine();
         // 
-        ImGui::Selectable(labelize(loan->id, cat->name, cat->id).c_str(), &m_loans_checkbox[loan->id]);
+        bool expired = !core::isLessThanDuration(duration, loan->date);
+        if (expired) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.1f, 0.1f, 0.9f));
+            //     ImGui::PushStyleColor(ImGuiCol_bg)
+            ImGui::Selectable(labelize(loan->id, cat->name + "!!!", cat->id).c_str(), &m_loans_checkbox[loan->id]);
+            ImGui::PopStyleColor();
+            if (ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                ImGui::Text("Vérifier si matériel toujours en emprunt");
+                ImGui::EndTooltip();
+            }
+        }
+        else {
+            ImGui::Selectable(labelize(loan->id, cat->name, cat->id).c_str(), &m_loans_checkbox[loan->id]);
+        }
+
         i++;
     }
     ImGui::TableSetColumnIndex(ACTIONS);

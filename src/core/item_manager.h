@@ -132,6 +132,8 @@ namespace core {
 
             std::optional<LoanID> new_loan(ItemID item_id, Note note, Date date, PersonID person_id);
 
+            Duration m_duration_before_alert = TWO_MONTHS;
+
             void change();
 
             friend class Workspace;
@@ -163,6 +165,18 @@ namespace core {
 
             long long int getId() { m_subscriber_counter++; return m_subscriber_counter; }
             void giveBackId(long long int id);
+
+            Duration getDuration() { return m_duration_before_alert; }
+            void setDuration(Duration duration) { m_duration_before_alert = duration; }
+
+
+            /**
+             * @brief This function is solely to clean up the mess introduced
+             * by previous bugs that can still lurk in the history of the loans.
+             * It is a good idea to call this function after a new load
+             * (in workspace)
+             */
+            void cleanUp();
 
             // Returns all categories, retired or not
             std::set<CategoryID> getAllCategories();
