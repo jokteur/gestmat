@@ -39,6 +39,7 @@ namespace core {
 
             bool _set_my_docs_dir();
 
+            void _export_to_excel();
         public:
             // Singleton stuff
             Workspace(Workspace& other) = delete;
@@ -56,6 +57,8 @@ namespace core {
             std::vector<File> getCompatibleFiles(std::string path = " ");
 
             std::string getDocsDir();
+
+            bool saveToExcel(std::string path);
 
             bool setWorkDir(const std::string& path);
             void setCurrentManager(Manager_ptr manager);

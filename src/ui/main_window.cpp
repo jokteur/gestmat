@@ -1,12 +1,17 @@
+#include <fstream>
+
 #include "main_window.h"
+#include "python/py_api.h"
 
 #include "style.h"
+
 #include "core/item_manager.h"
 
 #include "ui/widgets/modal.h"
 
 #include "imgui_internal.h"
 
+namespace py = pybind11;
 void MainApp::InitializationBeforeLoop() {
     ui_state->font_regular = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Regular.ttf", 18).value();
     ui_state->font_italic = Tempo::AddFontFromFileTTF("fonts/Roboto/Roboto-Italic.ttf", 18).value();
@@ -31,7 +36,43 @@ void MainApp::InitializationBeforeLoop() {
     // m_workspace.save("transfert_donnees_ancien", m_workspace.getCurrentManager());
 }
 
+void MainApp::preload() {
+    if (!m_pandas_loaded) {
+        Tempo::jobFct job = [this](float&, bool&) -> std::shared_ptr<Tempo::JobResult> {
+            Tempo::JobResult job_result;
+
+            std::string err;
+            auto state = PyGILState_Ensure();
+            try {
+                py::module::import("pandas");
+            }
+            catch (const std::exception& e) {
+                m_pandas_error = e.what();
+            }
+
+            PyGILState_Release(state);
+
+            // Wake the usb key up
+            try {
+                std::ofstream myfile;
+                myfile.open("test.txt");
+                myfile << "test\n";
+                myfile.close();
+            }
+            catch (const std::exception&) {
+
+            }
+
+            return std::make_shared<Tempo::JobResult>(job_result);
+        };
+        Tempo::JobScheduler::getInstance().addJob("load_pandas", job);
+        m_pandas_loaded = true;
+        return;
+    }
+}
+
 void MainApp::FrameUpdate() {
+    preload();
 #ifdef IMGUI_HAS_VIEWPORT
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);

@@ -36,6 +36,10 @@ private:
     std::shared_ptr<ItemsAlert> m_alerts = std::make_shared<ItemsAlert>(ui_state);
     std::shared_ptr<ItemsState> m_state = std::make_shared<ItemsState>(ui_state);
 
+    bool m_pandas_loaded = false;
+    std::string m_pandas_error;
+    void preload();
+
 public:
     virtual ~MainApp() {}
 

@@ -176,6 +176,7 @@ void ShowItem::delete_item() {
         if (button(labelize(m_item->id, "Supprimer"), m_ui_state)) {
             m_manager->deleteRetiredItem(m_item->id);
             show = false;
+            m_item = nullptr;
             m_workspace.save("supprimer_objet");
         }
     };

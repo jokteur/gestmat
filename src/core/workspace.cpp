@@ -2,6 +2,7 @@
 #include "compress.h"
 
 #include "python/py_api.h"
+#include "with.h"
 
 #include <filesystem>
 #include <fstream>
@@ -342,6 +343,142 @@ namespace core {
                 }
             }
             return files;
+        }
+
+        void Workspace::_export_to_excel() {
+            if (m_current_manager == nullptr)
+                return;
+
+            auto state = PyGILState_Ensure();
+            try {
+                auto pd = py::module::import("pandas");
+
+                py::dict kwargs;
+
+                // Current loans
+                py::list l_date_ordered, l_date, l_name, l_surname, l_birthday;
+                py::list l_place, l_type, l_infos, l_notes;
+                std::string first_col_name;
+
+                for (auto pair : m_current_manager->m_item_loan_map) {
+                    auto item = m_current_manager->getItem(pair.first).value();
+                    auto cat = m_current_manager->getCategory(item->category).value();
+                    for (auto loan_id : pair.second) {
+                        auto loan = m_current_manager->getLoan(loan_id).value();
+                        auto person = m_current_manager->getPerson(loan->person).value();
+                        l_date_ordered.append(loan->date.format("%Y/%m/%d"));
+                        l_date.append(loan->date.format("%d/%m/%Y"));
+                        l_surname.append(person->surname);
+                        l_name.append(person->name);
+                        l_type.append(cat->name);
+                        l_birthday.append(person->birthday.format("%d/%m/%Y"));
+                        l_place.append(person->place);
+
+                        std::string str;
+                        int i = 0;
+                        for (auto prop_pair : item->property_values) {
+                            if (i > 0)
+                                str += " / ";
+                            auto prop = m_current_manager->getProperty(prop_pair.first).value();
+                            str += prop->name + ": " + item->property_values[prop->id];
+                            i++;
+                        }
+                        std::string notes;
+                        if (!person->notes.empty()) {
+                            i = 0;
+                            for (auto note : person->notes) {
+                                if (i > 0)
+                                    notes += "\n";
+                                notes += note.content;
+                                i++;
+                            }
+                        }
+                        l_notes.append(notes);
+                        l_infos.append(str);
+                    }
+                }
+                py::dict data;
+                data["sort"] = l_date_ordered;
+                data["Date d'emprunt"] = l_date;
+                data["Nom"] = l_surname;
+                data["Prénom"] = l_name;
+                data["Date de naissance"] = l_birthday;
+                data["Unité / Chambre"] = l_place;
+                data["Type"] = l_type;
+                data["Notes"] = l_notes;
+                data["Infos objets"] = l_infos;
+
+                kwargs["data"] = data;
+                auto df = pd.attr("DataFrame")(**kwargs);
+                df.attr("sort_values")("sort", 0, true, true);
+                auto dic = py::dict();
+                dic["inplace"] = true;
+                df.attr("drop")("sort", 1, **dic);
+
+                // Items
+                auto collections = py::module::import("collections");
+
+
+                std::map<std::string, py::object> dfs;
+                for (auto cat_id : m_current_manager->getAllCategories()) {
+                    auto cat = m_current_manager->getCategory(cat_id).value();
+                    std::map<std::string, py::list> columns;
+                    for (auto item_id : cat->registered_items) {
+                        auto item = m_current_manager->getItem(item_id).value();
+                        for (auto prop_id : cat->properties) {
+                            auto prop = m_current_manager->getProperty(prop_id).value();
+                            std::string content;
+                            if (item->property_values.contains(prop_id)) {
+                                content = item->property_values[prop_id];
+                            }
+                            columns[prop->name].append(content);
+                        }
+                    }
+                    kwargs.clear();
+
+                    data.clear();
+                    std::string first_col;
+                    int i = 0;
+                    for (auto prop_id : cat->properties) {
+                        auto prop = m_current_manager->getProperty(prop_id).value();
+                        if (i == 0)
+                            first_col = prop->name;
+                        data[prop->name.c_str()] = columns[prop->name];
+                        i++;
+                    }
+                    kwargs["data"] = data;
+                    auto df_ = pd.attr("DataFrame")(**kwargs);
+                    if (!first_col.empty())
+                        df_.attr("sort_values")(first_col, 0, true, true);
+                    dfs[cat->name] = df_;
+                    // py::print(dfs[cat->name]);
+                    // dfs[cat->name].attr("sort_values")(dfs[cat->name].attr("columns")[0]);
+                }
+
+                py::with(pd.attr("ExcelWriter")("hello2.xlsx"), [&df, &dfs](py::object writer) {
+                    py::dict kwargs;
+                    kwargs["sheet_name"] = "Emprunts en cours";
+                    kwargs["index"] = false;
+                    df.attr("to_excel")(writer, **kwargs);
+                    for (auto pair : dfs) {
+                        kwargs["sheet_name"] = pair.first;
+                        pair.second.attr("to_excel")(writer, **kwargs);
+                    }
+                    });
+            }
+            catch (const std::exception& e) {
+                std::cerr << e.what() << std::endl;
+                PyGILState_Release(state);
+                return;
+            }
+
+            PyGILState_Release(state);
+            return;
+        }
+
+        bool Workspace::saveToExcel(std::string path) {
+            _export_to_excel();
+            return true;
         }
 
 
