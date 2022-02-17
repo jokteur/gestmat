@@ -2,11 +2,6 @@
 
 void NavBar::FrameUpdate() {
     // Styling the tab bar
-
-    if (ImGui::Button("excel")) {
-        m_workspace.saveToExcel("bla");
-    }
-
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(20, 8));
 
     ImGui::BeginTabBar("Nav bar");

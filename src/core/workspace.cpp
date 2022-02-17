@@ -298,6 +298,8 @@ namespace core {
 
             manager->setChange();
 
+            saveToExcel();
+
             return ret;
         }
 
@@ -334,6 +336,8 @@ namespace core {
                 std::string file_path = entry.path().string();
                 std::string file_name = entry.path().filename().string();
                 std::string::size_type const p(file_name.find_last_of('.'));
+                if (p >= file_name.size())
+                    continue;
                 std::string extension = file_name.substr(p);
 
                 if (extension == EXTENSION) {
@@ -345,9 +349,12 @@ namespace core {
             return files;
         }
 
-        void Workspace::_export_to_excel() {
+        std::string Workspace::_export_to_excel(std::vector<std::string> paths, std::string) {
             if (m_current_manager == nullptr)
-                return;
+                return "no_manager";
+
+            // One big ugly function to save data to
+            // an excel file
 
             auto state = PyGILState_Ensure();
             try {
@@ -455,32 +462,40 @@ namespace core {
                     // dfs[cat->name].attr("sort_values")(dfs[cat->name].attr("columns")[0]);
                 }
 
-                py::with(pd.attr("ExcelWriter")("hello2.xlsx"), [&df, &dfs](py::object writer) {
-                    py::dict kwargs;
-                    kwargs["sheet_name"] = "Emprunts en cours";
-                    kwargs["index"] = false;
-                    df.attr("to_excel")(writer, **kwargs);
-                    for (auto pair : dfs) {
-                        kwargs["sheet_name"] = pair.first;
-                        pair.second.attr("to_excel")(writer, **kwargs);
-                    }
-                    });
+                for (auto path : paths) {
+                    path += "\\materiel_ergo.xlsx";
+                    py::with(pd.attr("ExcelWriter")(path), [&df, &dfs](py::object writer) {
+                        py::dict kwargs;
+                        kwargs["sheet_name"] = "Emprunts en cours";
+                        kwargs["index"] = false;
+                        df.attr("to_excel")(writer, **kwargs);
+                        for (auto pair : dfs) {
+                            kwargs["sheet_name"] = pair.first;
+                            pair.second.attr("to_excel")(writer, **kwargs);
+                        }
+                        });
+                }
             }
             catch (const std::exception& e) {
                 std::cerr << e.what() << std::endl;
                 PyGILState_Release(state);
-                return;
+                return e.what();
             }
 
             PyGILState_Release(state);
-            return;
+            return "";
         }
 
-        bool Workspace::saveToExcel(std::string path) {
-            _export_to_excel();
+        bool Workspace::saveToExcel() {
+            std::vector<std::string> paths = {
+                _get_dir_path() + "\\excel",
+                m_docs_dir + "\\" + DIR_NAME + "\\excel"
+            };
+            std::filesystem::create_directory(paths[0]);
+            std::filesystem::create_directory(paths[1]);
+            std::string ret = _export_to_excel(paths);
             return true;
         }
-
 
         void Workspace::setCurrentManager(Manager_ptr manager) {
             m_current_manager = manager;
