@@ -32,6 +32,7 @@ void MainApp::InitializationBeforeLoop() {
     else
         m_open_error = m_workspace.loadIntoCurrent(last.path);
 
+
     // m_workspace.setCompression(true);
     // m_workspace.save("transfert_donnees_ancien", m_workspace.getCurrentManager());
 }

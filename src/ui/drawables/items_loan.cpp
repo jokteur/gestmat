@@ -87,7 +87,11 @@ int Search(ImGuiInputTextCallbackData* data) {
     if (widget->m_search_in == ItemsLoans::NONE)
         return 1;
 
+
     widget->m_search_results.clear();
+    if (!widget->m_surname.empty() && !widget->m_name.empty()) {
+        return 0;
+    }
     auto loans = widget->m_manager->getActiveLoans();
     std::string input = toLower(std::string(data->Buf));
 
