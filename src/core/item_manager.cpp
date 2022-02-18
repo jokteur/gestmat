@@ -4,6 +4,7 @@
 namespace core {
     namespace Item {
         ObjectID Base::ID = 0;
+        std::set<ObjectID> Base::_ids;
 
         template<typename V, typename T>
         bool find_in_map(const std::map<V, T>& map, V id) {
@@ -100,7 +101,85 @@ namespace core {
             return std::optional<bool>();
         }
 
+
+        template<typename V, typename T>
+        void add_to_set(const std::map<V, T>& map) {
+            for (auto& pair : map) {
+                Base::addID(pair.first);
+            }
+        }
+        void Manager::buildIDSet() {
+            add_to_set<ItemID, Item_ptr>(m_registered_items);
+            add_to_set<ItemID, Item_ptr>(m_retired_items);
+            add_to_set<CategoryID, Category_ptr>(m_registered_categories);
+            add_to_set<CategoryID, Category_ptr>(m_retired_categories);
+            add_to_set<PropertyID, Property_ptr>(m_registered_properties);
+            add_to_set<PropertyID, Property_ptr>(m_retired_properties);
+            add_to_set<PersonID, Person_ptr>(m_registered_persons);
+            add_to_set<PersonID, Person_ptr>(m_retired_persons);
+            add_to_set<LoanID, Loan_ptr>(m_registered_loans);
+            add_to_set<LoanID, Loan_ptr>(m_retired_loans);
+        }
+
+        std::vector<ObjectID> intersect(std::set<ObjectID> v1, std::set<ObjectID> v2) {
+            std::vector<ObjectID> v_intersection;
+
+            std::set_intersection(v1.begin(), v1.end(),
+                v2.begin(), v2.end(),
+                std::back_inserter(v_intersection));
+            return v_intersection;
+        }
+
+        template<typename V, typename T>
+        void fill_set(const std::map<V, T>& map, std::set<ObjectID>& set) {
+            for (auto& pair : map) {
+                set.insert(pair.first);
+            }
+        }
+
+
+        void Manager::findDuplicates() {
+            std::set<ObjectID> items;
+            std::set<ObjectID> categories;
+            std::set<ObjectID> properties;
+            std::set<ObjectID> persons;
+            std::set<ObjectID> loans;
+
+            fill_set<ItemID, Item_ptr>(m_registered_items, items);
+            fill_set<ItemID, Item_ptr>(m_retired_items, items);
+            fill_set<CategoryID, Category_ptr>(m_registered_categories, categories);
+            fill_set<CategoryID, Category_ptr>(m_retired_categories, categories);
+            fill_set<PropertyID, Property_ptr>(m_registered_properties, properties);
+            fill_set<PropertyID, Property_ptr>(m_retired_properties, properties);
+            fill_set<PersonID, Person_ptr>(m_registered_persons, persons);
+            fill_set<PersonID, Person_ptr>(m_retired_persons, persons);
+            fill_set<LoanID, Loan_ptr>(m_registered_loans, loans);
+            fill_set<LoanID, Loan_ptr>(m_retired_loans, loans);
+
+            auto i_c = intersect(items, categories);
+            std::cout << "i_c " << i_c.size() << std::endl;
+            auto i_pr = intersect(items, properties);
+            std::cout << "i_pr " << i_pr.size() << std::endl;
+            auto i_pe = intersect(items, persons);
+            std::cout << "i_pe " << i_pe.size() << std::endl;
+            auto i_l = intersect(items, loans);
+            std::cout << "i_l " << i_l.size() << std::endl;
+            auto c_pr = intersect(categories, properties);
+            std::cout << "c_pr " << c_pr.size() << std::endl;
+            auto c_pe = intersect(categories, persons);
+            std::cout << "c_pe " << c_pe.size() << std::endl;
+            auto c_l = intersect(categories, loans);
+            std::cout << "c_l " << c_l.size() << std::endl;
+            auto pr_pe = intersect(properties, persons);
+            std::cout << "pr_pe " << pr_pe.size() << std::endl;
+            auto pe_l = intersect(persons, loans);
+            std::cout << "pe_l " << pe_l.size() << std::endl;
+            std::cout << std::endl;
+        }
+
         void Manager::cleanUp() {
+            buildIDSet();
+            findDuplicates();
             std::set<ItemID> to_delete;
             for (auto pair : m_item_loan_map) {
                 if (pair.second.empty()) {

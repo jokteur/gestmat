@@ -29,11 +29,19 @@ namespace core {
         class Base {
         protected:
             static ObjectID ID;
+            static std::set<ObjectID> _ids;
         public:
             ObjectID id = 0;
             Base() {
+                while (_ids.contains(ID)) {
+                    ID++;
+                }
                 id = ID;
-                ID++;
+                _ids.insert(id);
+            }
+
+            static void addID(ObjectID id) {
+                _ids.insert(id);
             }
 
             static ObjectID getID() {
@@ -136,6 +144,8 @@ namespace core {
 
             void change();
 
+            void buildIDSet();
+
             friend class Workspace;
         public:
             Manager() = default;
@@ -169,6 +179,7 @@ namespace core {
             Duration getDuration() { return m_duration_before_alert; }
             void setDuration(Duration duration) { m_duration_before_alert = duration; }
 
+            void findDuplicates();
 
             /**
              * @brief This function is solely to clean up the mess introduced
