@@ -156,25 +156,25 @@ namespace core {
             fill_set<LoanID, Loan_ptr>(m_registered_loans, loans);
             fill_set<LoanID, Loan_ptr>(m_retired_loans, loans);
 
-            auto i_c = intersect(items, categories);
-            std::cout << "i_c " << i_c.size() << std::endl;
-            auto i_pr = intersect(items, properties);
-            std::cout << "i_pr " << i_pr.size() << std::endl;
-            auto i_pe = intersect(items, persons);
-            std::cout << "i_pe " << i_pe.size() << std::endl;
-            auto i_l = intersect(items, loans);
-            std::cout << "i_l " << i_l.size() << std::endl;
-            auto c_pr = intersect(categories, properties);
-            std::cout << "c_pr " << c_pr.size() << std::endl;
-            auto c_pe = intersect(categories, persons);
-            std::cout << "c_pe " << c_pe.size() << std::endl;
-            auto c_l = intersect(categories, loans);
-            std::cout << "c_l " << c_l.size() << std::endl;
-            auto pr_pe = intersect(properties, persons);
-            std::cout << "pr_pe " << pr_pe.size() << std::endl;
-            auto pe_l = intersect(persons, loans);
-            std::cout << "pe_l " << pe_l.size() << std::endl;
-            std::cout << std::endl;
+            // auto i_c = intersect(items, categories);
+            // std::cout << "i_c " << i_c.size() << std::endl;
+            // auto i_pr = intersect(items, properties);
+            // std::cout << "i_pr " << i_pr.size() << std::endl;
+            // auto i_pe = intersect(items, persons);
+            // std::cout << "i_pe " << i_pe.size() << std::endl;
+            // auto i_l = intersect(items, loans);
+            // std::cout << "i_l " << i_l.size() << std::endl;
+            // auto c_pr = intersect(categories, properties);
+            // std::cout << "c_pr " << c_pr.size() << std::endl;
+            // auto c_pe = intersect(categories, persons);
+            // std::cout << "c_pe " << c_pe.size() << std::endl;
+            // auto c_l = intersect(categories, loans);
+            // std::cout << "c_l " << c_l.size() << std::endl;
+            // auto pr_pe = intersect(properties, persons);
+            // std::cout << "pr_pe " << pr_pe.size() << std::endl;
+            // auto pe_l = intersect(persons, loans);
+            // std::cout << "pe_l " << pe_l.size() << std::endl;
+            // std::cout << std::endl;
         }
 
         void Manager::cleanUp() {

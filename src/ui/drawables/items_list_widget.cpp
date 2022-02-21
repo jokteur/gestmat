@@ -235,7 +235,7 @@ void ItemsListWidget::FrameUpdate() {
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 2));
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, 0);
+    // ImGui::PushStyleColor(ImGuiCol_FrameBg, 0);
 
     if (m_edit_mode) {
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
@@ -313,7 +313,7 @@ void ItemsListWidget::FrameUpdate() {
         ImGui::PopStyleVar();
     }
     ImGui::PopStyleVar(3);
-    ImGui::PopStyleColor();
+    // ImGui::PopStyleColor();
     ImGui::Spacing();
 }
 void ItemsListWidget::BeforeFrameUpdate() {
