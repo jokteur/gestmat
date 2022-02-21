@@ -93,13 +93,12 @@ include_directories(vendors/json/single_include)
 # -----------
 include_directories(src)
 file (GLOB source_list RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-        src/*.cpp src/*.h
-        src/python/*.h
+        src/*.cpp
         src/python/*.cpp
-        src/core/*.h src/core/*.cpp
-        src/ui/drawables/*.h src/ui/drawables/*.cpp
-        src/ui/widgets/*.h src/ui/widgets/*.cpp
-        src/ui/*.cpp src/ui/*.h
+        src/core/*.cpp
+        src/ui/drawables/*.cpp
+        src/ui/widgets/*.cpp
+        src/ui/*.cpp
     )
 
 #Date

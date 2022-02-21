@@ -2,7 +2,7 @@
 #include "compress.h"
 
 #include "python/py_api.h"
-#include "with.h"
+#include "python/with.h"
 
 #include <filesystem>
 #include <fstream>
@@ -356,6 +356,9 @@ namespace core {
             // One big ugly function to save data to
             // an excel file
 
+            std::string filename = "\\" + getCurrentDate().format("%Y-%m-%d-")
+                + std::string("-materiel_ergo.xlsx");
+
             auto state = PyGILState_Ensure();
             try {
                 auto pd = py::module::import("pandas");
@@ -463,7 +466,7 @@ namespace core {
                 }
 
                 for (auto path : paths) {
-                    path += "\\materiel_ergo.xlsx";
+                    path += filename;
                     py::with(pd.attr("ExcelWriter")(path), [&df, &dfs](py::object writer) {
                         py::dict kwargs;
                         kwargs["sheet_name"] = "Emprunts en cours";

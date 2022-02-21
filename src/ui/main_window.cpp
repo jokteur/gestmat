@@ -6,6 +6,7 @@
 #include "style.h"
 
 #include "core/item_manager.h"
+#include "python/with.h"
 
 #include "ui/widgets/modal.h"
 
@@ -45,10 +46,22 @@ void MainApp::preload() {
             std::string err;
             auto state = PyGILState_Ensure();
             try {
-                py::module::import("pandas");
+                auto pd = py::module::import("pandas");
+
+                py::dict data, kwargs;
+                py::list list;
+                list.append(1);
+                data["1"] = list;
+                kwargs["data"] = data;
+                auto df = pd.attr("DataFrame")(**kwargs);
+
+                py::with(pd.attr("ExcelWriter")("test.xlsx"), [&df](py::object writer) {
+                    df.attr("to_excel")(writer);
+                    });
             }
             catch (const std::exception& e) {
                 m_pandas_error = e.what();
+                std::cout << e.what() << std::endl;
             }
 
             PyGILState_Release(state);
