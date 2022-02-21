@@ -147,6 +147,7 @@ namespace core {
             void buildIDSet();
 
             friend class Workspace;
+            friend class Debug::Debugger;
         public:
             Manager() = default;
 

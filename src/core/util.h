@@ -6,6 +6,10 @@
 
 #include <nlohmann/json.hpp>
 
+namespace Debug {
+    class Debugger;
+}
+
 namespace core {
     /**
      * @brief Verifies if a date is correct

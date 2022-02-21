@@ -185,6 +185,9 @@ namespace core {
                 if (pair.second.empty()) {
                     to_delete.insert(pair.first);
                 }
+                // for (auto loan_id : pair.second) {
+
+                // }
             }
             for (auto item_id : to_delete) {
                 m_item_loan_map.erase(item_id);

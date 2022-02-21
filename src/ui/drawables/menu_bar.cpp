@@ -43,11 +43,18 @@ void MenuBar::FrameUpdate() {
 
     float margin = width - button_width - ImGui::GetStyle().ItemInnerSpacing.x * 4.5f;
 
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + margin);
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + margin - 10.f);
     if (ImGui::Button("Historique")) {
         m_history.show();
+    }
+    // Hidden debugger
+    ImGui::Text("  ");
+    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Right)
+        && ImGui::IsItemHovered(0)) {
+        m_debugger.show();
     }
 
     ImGui::EndMainMenuBar();
     m_history.showPreview();
+    m_debugger.FrameUpdate();
 }
