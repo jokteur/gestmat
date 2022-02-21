@@ -77,10 +77,19 @@ void HistoryWidget::FrameUpdate() {
     int prev_month = 0;
     int prev_year = 0;
     bool draw_day = false;
-    bool first = true;
+    bool draw_month = false;
+    bool first_day = true;
+    bool first_month = true;
     for (auto file : files) {
         auto datetime = getDatetime(file.timestamp);
         if (prev_year != datetime.year) {
+            if (draw_month)
+                ImGui::TreePop();
+            if (draw_day)
+                ImGui::TreePop();
+            draw_month = false;
+            draw_day = false;
+
             prev_year = datetime.year;
             Tempo::PushFont(m_ui_state->font_bold);
             ImGui::Text(std::to_string(datetime.year).c_str());
@@ -88,56 +97,71 @@ void HistoryWidget::FrameUpdate() {
             ImGui::Separator();
         }
         if (prev_month != datetime.month) {
-            prev_month = datetime.month;
-            Tempo::PushFont(m_ui_state->font_italic);
-            ImGui::Text(getMonth(datetime.month).c_str());
-            Tempo::PopFont();
-        }
-        if (prev_day != datetime.day) {
-            if (!first && draw_day) {
+            if (!first_month && draw_month) {
                 ImGui::TreePop();
             }
-            first = false;
-            prev_day = datetime.day;
-            std::string day = getDay(datetime.year, datetime.month, datetime.day);
-            day += " " + std::to_string(datetime.day);
-            draw_day = ImGui::TreeNode(day.c_str());
+            if (draw_day)
+                ImGui::TreePop();
+            draw_day = false;
+
+            first_month = false;
+            prev_month = datetime.month;
+            Tempo::PushFont(m_ui_state->font_italic);
+            draw_month = ImGui::TreeNode(labelize(file.timestamp, getMonth(datetime.month)).c_str());
+            Tempo::PopFont();
+
         }
-        if (draw_day) {
-            if (ImGui::Button(labelize(file.timestamp, "Prévisualiser").c_str())) {
-                if (m_manager == nullptr)
-                    m_manager = m_workspace.getCurrentManager();
-
-                std::string err = m_workspace.loadIntoCurrent(file.path);
-
-                Tempo::EventQueue::getInstance().post(std::make_shared<Tempo::Event>("change_manager"));
-
-                if (err.empty()) {
-                    m_visualize = true;
-                    m_ui_state->read_only = true;
-                    m_current_file = std::make_shared<Item::File>(file);
+        if (draw_month) {
+            if (prev_day != datetime.day) {
+                if (!first_day && draw_day) {
+                    ImGui::TreePop();
                 }
-                else {
-                    const modal_fct error_fct = [this, file, err](bool& show, bool&, bool&) {
-                        ImGui::Text("Le programme a essayé de charger '"); ImGui::SameLine();
-                        ImGui::Text(file.filename.c_str()); ImGui::SameLine();
-                        ImGui::Text("' et l'erreur suivante s'est produite:\n\n");
-                        ImGui::Text(err.c_str());
-                        if (ImGui::Button("Retour")) {
-                            show = false;
-                        }
-                    };
-                    Modals::getInstance().setModal("Erreur lors du chargement", error_fct);
-                }
+                first_day = false;
+                prev_day = datetime.day;
+                std::string day = getDay(datetime.year, datetime.month, datetime.day);
+                day += " " + std::to_string(datetime.day);
+                draw_day = ImGui::TreeNode(labelize(file.timestamp, day).c_str());
             }
-            ImGui::SameLine();
-            ImGui::AlignTextToFramePadding();
-            std::string txt = "À " + getTime(datetime) + ": " + file.action_name;
-            ImGui::Text(txt.c_str());
+            if (draw_day) {
+                if (ImGui::Button(labelize(file.timestamp, "Prévisualiser").c_str())) {
+                    if (m_manager == nullptr)
+                        m_manager = m_workspace.getCurrentManager();
+
+                    std::string err = m_workspace.loadIntoCurrent(file.path);
+
+                    Tempo::EventQueue::getInstance().post(std::make_shared<Tempo::Event>("change_manager"));
+
+                    if (err.empty()) {
+                        m_visualize = true;
+                        m_ui_state->read_only = true;
+                        m_current_file = std::make_shared<Item::File>(file);
+                    }
+                    else {
+                        const modal_fct error_fct = [this, file, err](bool& show, bool&, bool&) {
+                            ImGui::Text("Le programme a essayé de charger '"); ImGui::SameLine();
+                            ImGui::Text(file.filename.c_str()); ImGui::SameLine();
+                            ImGui::Text("' et l'erreur suivante s'est produite:\n\n");
+                            ImGui::Text(err.c_str());
+                            if (ImGui::Button("Retour")) {
+                                show = false;
+                            }
+                        };
+                        Modals::getInstance().setModal("Erreur lors du chargement", error_fct);
+                    }
+                }
+                ImGui::SameLine();
+                ImGui::AlignTextToFramePadding();
+                std::string txt = "À " + getTime(datetime) + ": " + file.action_name;
+                ImGui::Text(txt.c_str());
+            }
         }
     }
-    if (files.size() > 0 && draw_day)
-        ImGui::TreePop();
+    if (files.size() > 0) {
+        if (draw_day)
+            ImGui::TreePop();
+        if (draw_month)
+            ImGui::TreePop();
+    }
     if (m_set_scroll) {
         m_set_scroll = false;
         ImGui::SetScrollHereY();
