@@ -138,6 +138,14 @@ std::string format_CET(long long int timestamp) {
     return os.str();
 }
 
+void boldAndNormal(std::string bold, std::string normal, UIState_ptr ui_state) {
+    Tempo::PushFont(ui_state->font_bold);
+    ImGui::Text((bold + ":").c_str());
+    Tempo::PopFont();
+    ImGui::SameLine();
+    ImGui::Text(normal.c_str());
+}
+
 void timestampToText(long long int timestamp) {
     // Date library is cursed on some computers that are
     // not up-to-date, roll my own

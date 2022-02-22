@@ -37,12 +37,20 @@ private:
     std::string m_col_name;
     Item::PropertyID m_col_id = -1;
 
+    // Variables for never loaned
+    bool m_fill_cols = false;
+    bool m_ascending = true;
+    int m_sort_col_id = 0;
+    std::map<std::string, std::vector<Item::ItemID>> m_items_list;
+
     long long int m_sub_id = -1;
 
     void reset();
     void set_properties_widget();
     void update_widget();
 
+    void fill_items();
+    void show_row(Item::ItemID item, Item::Category_ptr cat);
     void show_general();
     void show_frequencies();
     void show_never_loaned();

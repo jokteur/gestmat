@@ -1,7 +1,23 @@
 #include "items_stats.h"
 #include "ui/widgets/misc.h"
 #include "implot.h"
+#include "implot_internal.h"
+#include "ui/imgui_util.h"
 #include <cmath>
+
+
+template <typename T>
+int BinarySearch(const T* arr, int l, int r, T x) {
+    if (r >= l) {
+        int mid = l + (r - l) / 2;
+        if (arr[mid] == x)
+            return mid;
+        if (arr[mid] > x)
+            return BinarySearch(arr, l, mid - 1, x);
+        return BinarySearch(arr, mid + 1, r, x);
+    }
+    return -1;
+}
 
 ItemsStats::ItemsStats(UIState_ptr ui_state) : Drawable(ui_state) {
     m_listener.filter = "change_manager";
@@ -150,6 +166,7 @@ void ItemsStats::calculate() {
         if (!items.contains(item_id))
             m_never_loaned.insert(item_id);
     }
+    // m_fill_cols = true;
 }
 
 void ItemsStats::show_general() {
@@ -177,25 +194,24 @@ void ItemsStats::show_general() {
 }
 
 void ItemsStats::show_frequencies() {
-    std::vector<const char*> y_ticks_str;
+    std::vector<const char*> y_ticks_label;
     static const char* xgroups[] = { "Nombre d'utilisations" };
     std::vector<double> positions;
     std::vector<double> x_ticks;
     std::vector<int> data;
+
     int i = 0;
     int max_num = 0;
     for (auto& pair : m_ordered) {
         for (auto& str : pair.second) {
             if (pair.first > max_num)
                 max_num = pair.first;
-            y_ticks_str.push_back(str.c_str());
+            y_ticks_label.push_back(str.c_str());
             positions.push_back(i);
             data.push_back(pair.first);
             i++;
         }
     }
-
-    const char** y_ticks_labels = &y_ticks_str[0];
 
     const int MAX_TICKS = 15;
     for (i = 0;i < max_num;) {
@@ -207,20 +223,145 @@ void ItemsStats::show_frequencies() {
     // float height = ImGui::GetStyle().FramePadding.y * data.size() * 5;
     if (ImPlot::BeginPlot("##bar_group", ImVec2(-1, -1))) {
         auto prop = m_manager->getProperty(m_col_id).value();
+
         ImPlot::SetupAxes("Nombre d'emprunts", prop->name.c_str(), ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
-        ImPlot::SetupAxisTicks(ImAxis_Y1, &positions[0], (int)data.size(), y_ticks_labels);
+        ImPlot::SetupAxisTicks(ImAxis_Y1, &positions[0], (int)data.size(), &y_ticks_label[0]);
         ImPlot::SetupAxisTicks(ImAxis_X1, &x_ticks[0], (int)x_ticks.size());
 
+        const double height_percent = 2. / 3.;
+        ImDrawList* draw_list = ImPlot::GetPlotDrawList();
+
+        if (ImPlot::IsPlotHovered()) {
+            ImPlotPoint mouse = ImPlot::GetPlotMousePos();
+            // std::cout << mouse.x << " " << mouse.y << std::endl;
+            mouse.y = ImPlot::RoundTo(mouse.y, 0);
+            float  tool_t = ImPlot::PlotToPixels(mouse.x, mouse.y - 0.5).y;
+            float  tool_b = ImPlot::PlotToPixels(mouse.x, mouse.y + 0.5).y;
+            float  tool_l = ImPlot::GetPlotPos().x;
+            float  tool_r = tool_l + ImPlot::GetPlotSize().x;
+            ImPlot::PushPlotClipRect();
+            draw_list->AddRectFilled(ImVec2(tool_l, tool_t), ImVec2(tool_r, tool_b), IM_COL32(128, 128, 128, 64));
+            ImPlot::PopPlotClipRect();
+            // // find mouse location index
+            int idx = BinarySearch(&positions[0], 0, (int)positions.size() - 1, mouse.y);
+            // // // render tool tip (won't be affected by plot clip rect)
+            if (idx != -1) {
+                ImGui::BeginTooltip();
+                // ImPlot::FormatDate(ImPlotTime::FromDouble(xs[idx]), buff, 32, ImPlotDateFmt_DayMoYr, ImPlot::GetStyle().UseISO8601);
+                boldAndNormal(prop->name, y_ticks_label[idx], m_ui_state);
+                boldAndNormal("Nombre d'emprunts", std::to_string(data[idx]), m_ui_state);
+                ImGui::EndTooltip();
+            }
+        }
         ImPlot::PlotBarGroupsH(xgroups,
             &data[0],
             1,
-            (int)data.size());
+            (int)data.size(),
+            height_percent);
         ImPlot::EndPlot();
     }
 }
 
-void ItemsStats::show_never_loaned() {
+void ItemsStats::show_row(Item::ItemID item_id, Item::Category_ptr cat) {
+    auto item = m_manager->getItem(item_id).value();
+    ImGui::TableNextRow();
+    int j = 0;
+    for (auto prop_id : cat->properties) {
+        if (cat->properties_hide.contains(prop_id))
+            continue;
+        ImGui::TableSetColumnIndex(j);
+        ImGui::TextWrapped(item->property_values[prop_id].c_str());
+        j++;
+    }
+}
 
+void ItemsStats::fill_items() {
+    m_items_list.clear();
+    auto cat = m_manager->getCategory(m_cat_id).value();
+
+    Item::PropertyID prop_id = -1;
+    int j = 0;
+    for (auto prop_id2 : cat->properties) {
+        if (cat->properties_hide.contains(prop_id2)) {
+            continue;
+        }
+        if (j == m_sort_col_id) {
+            prop_id = prop_id2;
+        }
+        j++;
+    }
+    if (prop_id == -1) {
+        prop_id = cat->properties[0];
+    }
+    auto prop = m_manager->getProperty(prop_id).value();
+
+    for (auto item_id : m_never_loaned) {
+        if (m_manager->isRetired(item_id).value())
+            continue;
+        auto item = m_manager->getItem(item_id).value();
+        m_items_list[item->property_values[prop_id]].push_back(item_id);
+    }
+}
+
+void ItemsStats::show_never_loaned() {
+    auto cat = m_manager->getCategory(m_cat_id).value();
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 4));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 2));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, 0);
+
+    ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_Sortable
+        | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable
+        | ImGuiTableFlags_SizingStretchProp;
+
+
+    if (ImGui::BeginTable(
+        labelize(m_cat_id, "Never Loaned").c_str(),
+        (int)cat->properties.size(), flags
+    )) {
+        int i = 0;
+        for (auto prop_id : cat->properties) {
+            int col_flags = 0;
+            if (i == 0) {
+                col_flags |= ImGuiTableColumnFlags_DefaultSort;
+            }
+            auto prop = m_manager->getProperty(prop_id).value();
+            ImGui::TableSetupColumn(prop->name.c_str(), col_flags);
+            i++;
+        }
+        ImGui::TableSetupScrollFreeze(0, 1);
+        ImGui::TableHeadersRow();
+
+        if (ImGuiTableSortSpecs* sorts_specs = ImGui::TableGetSortSpecs()) {
+            if (sorts_specs->SpecsDirty) {
+                m_ascending = sorts_specs->Specs->SortDirection == ImGuiSortDirection_Ascending ? true : false;
+                m_sort_col_id = sorts_specs->Specs->ColumnIndex;
+                m_fill_cols = true;
+                sorts_specs->SpecsDirty = false;
+            }
+        }
+        if (m_manager->isChanged(m_sub_id) || m_fill_cols) {
+            fill_items();
+        }
+        if (m_ascending) {
+            for (auto pair : m_items_list) {
+                auto items = pair.second;
+                for (auto item_id : items)
+                    show_row(item_id, cat);
+            }
+        }
+        else {
+            for (auto it = m_items_list.rbegin();it != m_items_list.rend();it++) {
+                auto items = it->second;
+                for (auto item_id : items)
+                    show_row(item_id, cat);
+            }
+        }
+
+        ImGui::EndTable();
+    }
+    ImGui::PopStyleVar(3);
+    ImGui::PopStyleColor();
 }
 
 void ItemsStats::FrameUpdate() {

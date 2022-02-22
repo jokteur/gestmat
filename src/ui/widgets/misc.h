@@ -24,6 +24,8 @@ std::string format_CET(long long int timestamp);
 
 void title(std::string title, UIState_ptr ui_state);
 
+void boldAndNormal(std::string bold, std::string normal, UIState_ptr ui_state);
+
 bool button(std::string name, UIState_ptr ui_state, std::string deactivated_msg = "", ImVec4 color = ImVec4(), bool ignore_deactivated = false, ImVec2 size = ImVec2());
 
 void labeledTextInput(std::string* content, const std::string& label, const std::string& imId, const std::string& hint, const std::string& error = "", ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = (ImGuiInputTextCallback)0, void* user_data = (void*)0);
