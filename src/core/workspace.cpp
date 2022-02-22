@@ -331,7 +331,7 @@ namespace core {
                 path = m_work_dir;
                 path += !path.empty() ? "\\" + DIR_NAME : DIR_NAME;
             }
-            std::vector<File> files;
+            std::map<std::string, File> files_order;
             for (const auto& entry : std::filesystem::directory_iterator(path)) {
                 std::string file_path = entry.path().string();
                 std::string file_name = entry.path().filename().string();
@@ -343,8 +343,13 @@ namespace core {
                 if (extension == EXTENSION) {
                     File file{ file_path, file_name };
                     getFileInfo(file);
-                    files.push_back(file);
+                    //We shouldn't have twice the same filename
+                    files_order[file_name] = file;
                 }
+            }
+            std::vector<File> files;
+            for (auto pair : files_order) {
+                files.push_back(pair.second);
             }
             return files;
         }
