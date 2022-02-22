@@ -19,7 +19,7 @@ void NavBar::FrameUpdate() {
         ImGui::EndTabItem();
     }
     if (ImGui::BeginTabItem("Statistiques")) {
-        m_ui_state->active_panel = UIState::ALERTES;
+        m_ui_state->active_panel = UIState::STATS;
         ImGui::EndTabItem();
     }
     ImGui::EndTabBar();

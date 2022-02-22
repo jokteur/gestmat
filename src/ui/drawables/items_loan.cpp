@@ -115,7 +115,7 @@ int Search(ImGuiInputTextCallbackData* data) {
 
 void ItemsLoans::search_widget() {
     ImGui::SameLine();
-    float width = ImGui::GetContentRegionAvailWidth() - 50.f;
+    float width = ImGui::GetContentRegionAvail().x - 50.f;
     float height = 250.f;
     if (m_search_in == SURNAME) {
         ImGui::Text("<");

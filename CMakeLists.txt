@@ -88,11 +88,17 @@ target_include_directories(zlib PUBLIC "${PROJECT_SOURCE_DIR}/vendors/zconf")
 add_subdirectory(vendors/json)
 include_directories(vendors/json/single_include)
 
+# ------
+# ImPlot
+# ------
+include_directories(vendors/ImPlot)
+
 # -----------
 # Main source
 # -----------
 include_directories(src)
 file (GLOB source_list RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+        vendors/ImPlot/*.cpp
         src/*.cpp
         src/python/*.cpp
         src/core/*.cpp

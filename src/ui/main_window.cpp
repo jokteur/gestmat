@@ -10,6 +10,7 @@
 
 #include "ui/widgets/modal.h"
 
+#include "implot.h"
 #include "imgui_internal.h"
 
 namespace py = pybind11;
@@ -33,9 +34,13 @@ void MainApp::InitializationBeforeLoop() {
     else
         m_open_error = m_workspace.loadIntoCurrent(last.path);
 
-
+    ImPlot::CreateContext();
     // m_workspace.setCompression(true);
     // m_workspace.save("transfert_donnees_ancien", m_workspace.getCurrentManager());
+}
+
+void MainApp::AfterLoop() {
+    ImPlot::DestroyContext();
 }
 
 void MainApp::preload() {
@@ -124,8 +129,8 @@ void MainApp::FrameUpdate() {
     case UIState::STATE:
         m_state->FrameUpdate();
         break;
-    case UIState::ALERTES:
-        m_alerts->FrameUpdate();
+    case UIState::STATS:
+        m_stats->FrameUpdate();
         break;
     }
     // if (ImGui::Button("Show demo")) {
@@ -156,8 +161,8 @@ void MainApp::BeforeFrameUpdate() {
     case UIState::STATE:
         m_state->BeforeFrameUpdate();
         break;
-    case UIState::ALERTES:
-        m_alerts->BeforeFrameUpdate();
+    case UIState::STATS:
+        m_stats->BeforeFrameUpdate();
         break;
     }
 }
