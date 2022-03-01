@@ -63,7 +63,6 @@ void ItemsStats::timeline_widget() {
     if (m_timeline_stats.empty())
         return;
 
-
     static const char* ilabels[] = { "Emprunt", "Retour" };
 
     std::vector<double> dates;
@@ -79,13 +78,57 @@ void ItemsStats::timeline_widget() {
             ImPlotAxisFlags_Time | ImPlotAxisFlags_Lock,
             ImPlotAxisFlags_RangeFit | ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_NoMenus);
 
-        ImPlot::SetupAxesLimits((double)toTimestamp(m_timeline_begin), (double)getTimestamp(), 0, m_timeline_max_y);
+        int day_length = 84600;
+        ImPlot::SetupAxesLimits((double)toTimestamp(m_timeline_begin) - day_length, (double)getTimestamp() + day_length, 0, m_timeline_max_y);
         ImPlot::SetupAxisFormat(ImAxis_Y1, "%.0f");
 
+        ImPlot::SetupLegend(ImPlotLocation_NorthWest, ImPlotLegendFlags_NoButtons);
+
+        auto plot = ImPlot::GetCurrentPlot();
+        auto gl_mouse = ImGui::GetMousePos();
+        auto tl = plot->CanvasRect.GetTL();
+        auto br = plot->CanvasRect.GetBR();
+
+        if (gl_mouse.x > tl.x && gl_mouse.x < br.x
+            && gl_mouse.y > tl.y && gl_mouse.y < br.y) {
+            ImPlotPoint mouse = ImPlot::GetPlotMousePos();
+            ImGui::BeginTooltip();
+            auto datetime = getDatetime((long long)mouse.x);
+            auto date = Date(
+                (uint8_t)datetime.day,
+                (uint8_t)datetime.month,
+                (uint16_t)datetime.year);
+            ImGui::Text(("Date:" + date.format("%d/%m/%Y")).c_str());
+            ImGui::EndTooltip();
+        }
         // begin plot item
-        if (ImPlot::BeginItem("##plot_timeline")) {
+        if (ImPlot::BeginItem("Emprunté")) {
             // override legend icon color
-            ImPlot::GetCurrentItem()->Color = IM_COL32(64, 64, 64, 255);
+            // fit data if requested
+            if (ImPlot::FitThisFrame()) {
+                for (int i = 0; i < dates.size(); ++i) {
+                    double sum = counters[i].loans + counters[i].returned;
+                    ImPlot::FitPoint(ImPlotPoint(dates[i], 0));
+                    ImPlot::FitPoint(ImPlotPoint(dates[i], sum));
+                }
+            }
+            // get ImGui window DrawList
+            ImDrawList* draw_list = ImPlot::GetPlotDrawList();
+            double half_width = 0.9;
+            const double day = 3600 * 24;
+
+            ImVec4 red = ImVec4(116.f / 255.f, 145.f / 255.f, 192.f / 255.f, 1.f);
+            // render data
+            for (int i = 0; i < dates.size(); ++i) {
+                ImVec2 bottom = ImPlot::PlotToPixels(dates[i] - half_width * day / 2, 0);
+                ImVec2 top = ImPlot::PlotToPixels(dates[i] + half_width * day / 2, counters[i].loans);
+                ImU32 color = ImGui::GetColorU32(red);
+                draw_list->AddRectFilled(top, bottom, color);
+            }
+        }
+
+        if (ImPlot::BeginItem("Rendu")) {
+            // override legend icon color
             // fit data if requested
             if (ImPlot::FitThisFrame()) {
                 for (int i = 0; i < dates.size(); ++i) {
@@ -100,32 +143,30 @@ void ItemsStats::timeline_widget() {
             double half_width = 0.9;
             const double day = 3600 * 24;
 
-            ImVec4 green = ImVec4(0, 1, 0, 1);
-            ImVec4 red = ImVec4(1, 0, 0, 1);
+            ImVec4 green = ImVec4(226.f / 255.f, 151.f / 255.f, 41.f / 255.f, 1.f);
             // render data
             for (int i = 0; i < dates.size(); ++i) {
                 double sum = counters[i].loans + counters[i].returned;
-
-                ImVec2 bottom = ImPlot::PlotToPixels(dates[i] - half_width * day / 2, 0);
-                ImVec2 top = ImPlot::PlotToPixels(dates[i] + half_width * day / 2, counters[i].loans);
-                ImU32 color = ImGui::GetColorU32(red);
-                draw_list->AddRectFilled(top, bottom, color);
-
-                bottom = ImPlot::PlotToPixels(dates[i] - half_width * day / 2, counters[i].loans);
-                top = ImPlot::PlotToPixels(dates[i] + half_width * day / 2, sum);
-                color = ImGui::GetColorU32(green);
+                ImVec2 bottom = ImPlot::PlotToPixels(dates[i] - half_width * day / 2, counters[i].loans);
+                ImVec2 top = ImPlot::PlotToPixels(dates[i] + half_width * day / 2, sum);
+                ImU32 color = ImGui::GetColorU32(green);
                 draw_list->AddRectFilled(top, bottom, color);
             }
 
-            ImPlot::DragRect(0, &m_rect.X.Min, &m_rect.Y.Min, &m_rect.X.Max, &m_rect.Y.Max, ImVec4(1, 0, 1, 1));
 
             // end plot item
             ImPlot::EndItem();
         }
 
+        ImPlot::DragRect(0, &m_rect.X.Min, &m_rect.Y.Min, &m_rect.X.Max, &m_rect.Y.Max, ImVec4(1.f, 0.05f, 1.f, 0.6f),
+            ImPlotDragToolFlags_NoFit);
+
+        // end plot item
+
         ImPlot::EndPlot();
     }
 }
+
 
 void ItemsStats::update_widget() {
     if (m_manager != nullptr && m_update_widget) {
@@ -162,12 +203,10 @@ void ItemsStats::update_widget() {
         m_combo = std::make_shared<Combo>(m_ui_state, selections, "", true);
         set_properties_widget();
 
-        double tmp_start = (double)toTimestamp(m_timeline_begin);
-        double tmp_end = (double)getTimestamp();
+        double start = (double)toTimestamp(m_timeline_begin);
+        double end = (double)getTimestamp();
 
-        double start = tmp_start + (tmp_end - tmp_start) / 3.;
-        double end = tmp_start + 2 * (tmp_end - tmp_start) / 3.;
-        m_rect = ImPlotRect(start, end, 0, m_timeline_max_y);
+        m_rect = ImPlotRect(start - 42300, end + 42300, -10, 1e6);
     }
 }
 void ItemsStats::calculate() {
@@ -457,6 +496,29 @@ void ItemsStats::show_never_loaned() {
 
 void ItemsStats::FrameUpdate() {
     m_manager = m_workspace.getCurrentManager();
+    auto color = ImPlot::GetStyleColorVec4(ImPlotCol_AxisBg);
+    ImPlot::PushStyleColor(ImPlotCol_AxisBgHovered, color);
+    ImPlot::PushStyleColor(ImPlotCol_AxisBgActive, color);
+
+    // Check if rect has been changed for date selection
+    if (m_rect.X.Min != m_prev_LR.x || m_rect.X.Max != m_prev_LR.y) {
+        m_recalculate = true;
+        m_prev_LR = ImVec2((float)m_rect.X.Min, (float)m_rect.X.Max);
+
+        long long start, end;
+        if (m_prev_LR.x > m_prev_LR.y) {
+            start = (long long)m_prev_LR.y;
+            end = (long long)m_prev_LR.x;
+        }
+        else {
+            start = (long long)m_prev_LR.x;
+            end = (long long)m_prev_LR.y;
+        }
+        auto left_dt = getDatetime(start);
+        auto right_dt = getDatetime(end);
+        m_start = Date((uint8_t)left_dt.day, (uint8_t)left_dt.month, (uint16_t)left_dt.year);
+        m_end = Date((uint8_t)right_dt.day, (uint8_t)right_dt.month, (uint16_t)right_dt.year);
+    }
 
     if (m_manager == nullptr)
         return;
@@ -533,4 +595,14 @@ void ItemsStats::FrameUpdate() {
             break;
         }
     }
+    else {
+        if (m_cat_id < 0) {
+            ImGui::Text("Aucunne donnée à afficher. Veuillez sélectionner une catégorie.");
+        }
+        else {
+            ImGui::Text("Aucune donnée à afficher. Veuillez sélectionner un intervalle de temps (rectangle rose)"
+                " avec au moins 1 objet rendu.");
+        }
+    }
+    ImPlot::PopStyleColor(2);
 }

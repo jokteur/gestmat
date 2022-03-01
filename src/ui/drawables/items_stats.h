@@ -44,9 +44,10 @@ private:
     int m_timeline_max_y;
     Date m_timeline_begin;
     ImPlotRect m_rect;
-
+    ImVec2 m_prev_LR;
     Date m_start;
     Date m_end = getCurrentDate();
+
     Item::CategoryID m_cat_id;
     std::string m_cat_name;
     std::string m_col_name;
