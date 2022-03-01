@@ -59,6 +59,74 @@ void ItemsStats::set_properties_widget() {
     }
 }
 
+void ItemsStats::timeline_widget() {
+    if (m_timeline_stats.empty())
+        return;
+
+
+    static const char* ilabels[] = { "Emprunt", "Retour" };
+
+    std::vector<double> dates;
+    std::vector<Stat> counters;
+    for (auto pair : m_timeline_stats) {
+        dates.push_back((double)pair.first + 3600);
+        counters.push_back(pair.second);
+    }
+
+    float height = ImGui::GetTextLineHeight() * 7;
+    if (ImPlot::BeginPlot("##timeline", ImVec2(-1, height), ImPlotFlags_NoMouseText)) {
+        ImPlot::SetupAxes(NULL, NULL,
+            ImPlotAxisFlags_Time | ImPlotAxisFlags_Lock,
+            ImPlotAxisFlags_RangeFit | ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_NoMenus);
+
+        ImPlot::SetupAxesLimits((double)toTimestamp(m_timeline_begin), (double)getTimestamp(), 0, m_timeline_max_y);
+        ImPlot::SetupAxisFormat(ImAxis_Y1, "%.0f");
+
+        // begin plot item
+        if (ImPlot::BeginItem("##plot_timeline")) {
+            // override legend icon color
+            ImPlot::GetCurrentItem()->Color = IM_COL32(64, 64, 64, 255);
+            // fit data if requested
+            if (ImPlot::FitThisFrame()) {
+                for (int i = 0; i < dates.size(); ++i) {
+                    double sum = counters[i].loans + counters[i].returned;
+                    ImPlot::FitPoint(ImPlotPoint(dates[i], 0));
+                    ImPlot::FitPoint(ImPlotPoint(dates[i], sum));
+                }
+            }
+
+            // get ImGui window DrawList
+            ImDrawList* draw_list = ImPlot::GetPlotDrawList();
+            double half_width = 0.9;
+            const double day = 3600 * 24;
+
+            ImVec4 green = ImVec4(0, 1, 0, 1);
+            ImVec4 red = ImVec4(1, 0, 0, 1);
+            // render data
+            for (int i = 0; i < dates.size(); ++i) {
+                double sum = counters[i].loans + counters[i].returned;
+
+                ImVec2 bottom = ImPlot::PlotToPixels(dates[i] - half_width * day / 2, 0);
+                ImVec2 top = ImPlot::PlotToPixels(dates[i] + half_width * day / 2, counters[i].loans);
+                ImU32 color = ImGui::GetColorU32(red);
+                draw_list->AddRectFilled(top, bottom, color);
+
+                bottom = ImPlot::PlotToPixels(dates[i] - half_width * day / 2, counters[i].loans);
+                top = ImPlot::PlotToPixels(dates[i] + half_width * day / 2, sum);
+                color = ImGui::GetColorU32(green);
+                draw_list->AddRectFilled(top, bottom, color);
+            }
+
+            ImPlot::DragRect(0, &m_rect.X.Min, &m_rect.Y.Min, &m_rect.X.Max, &m_rect.Y.Max, ImVec4(1, 0, 1, 1));
+
+            // end plot item
+            ImPlot::EndItem();
+        }
+
+        ImPlot::EndPlot();
+    }
+}
+
 void ItemsStats::update_widget() {
     if (m_manager != nullptr && m_update_widget) {
         m_update_widget = false;
@@ -67,6 +135,20 @@ void ItemsStats::update_widget() {
             auto loan = m_manager->getLoan(loan_id).value();
             if (getDifference(m_timeline_begin, loan->date) < 0)
                 m_timeline_begin = loan->date;
+
+            // Timeline
+            if (loan->date_back.isValid()) {
+                auto end = toTimestamp(loan->date_back);
+                m_timeline_stats[end].addReturned();
+            }
+            auto start = toTimestamp(loan->date);
+            m_timeline_stats[start].addLoan();
+        }
+        m_timeline_max_y = 0;
+        for (auto pair : m_timeline_stats) {
+            int sum = pair.second.loans + pair.second.returned;
+            if (sum > m_timeline_max_y)
+                m_timeline_max_y = sum;
         }
 
         auto cats = m_manager->getAllCategories();
@@ -79,9 +161,15 @@ void ItemsStats::update_widget() {
         }
         m_combo = std::make_shared<Combo>(m_ui_state, selections, "", true);
         set_properties_widget();
+
+        double tmp_start = (double)toTimestamp(m_timeline_begin);
+        double tmp_end = (double)getTimestamp();
+
+        double start = tmp_start + (tmp_end - tmp_start) / 3.;
+        double end = tmp_start + 2 * (tmp_end - tmp_start) / 3.;
+        m_rect = ImPlotRect(start, end, 0, m_timeline_max_y);
     }
 }
-
 void ItemsStats::calculate() {
     m_manager = m_workspace.getCurrentManager();
     if (m_manager == nullptr)
@@ -130,8 +218,9 @@ void ItemsStats::calculate() {
 
         auto loan_start = loan->date;
         auto loan_end = loan->date_back;
-        if (!loan->date_back.isValid())
+        if (!loan->date_back.isValid()) {
             loan_end = today;
+        }
 
         int diff = getDifference(loan_end, m_end);
         if (diff < 0)
@@ -166,7 +255,7 @@ void ItemsStats::calculate() {
         if (!items.contains(item_id))
             m_never_loaned.insert(item_id);
     }
-    // m_fill_cols = true;
+    m_fill_cols = true;
 }
 
 void ItemsStats::show_general() {
@@ -312,12 +401,14 @@ void ItemsStats::show_never_loaned() {
 
     ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_Sortable
         | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable
+        | ImGuiTableFlags_ScrollY
         | ImGuiTableFlags_SizingStretchProp;
+
 
 
     if (ImGui::BeginTable(
         labelize(m_cat_id, "Never Loaned").c_str(),
-        (int)cat->properties.size(), flags
+        (int)cat->properties.size(), flags, ImVec2(0, -1)
     )) {
         int i = 0;
         for (auto prop_id : cat->properties) {
@@ -410,8 +501,10 @@ void ItemsStats::FrameUpdate() {
                 m_recalculate = true;
             }
         }
-
     }
+
+    timeline_widget();
+
     if (m_max_days > 0.f) {
         ImGui::BeginTabBar("show_stat_bar");
         if (ImGui::BeginTabItem("Général")) {

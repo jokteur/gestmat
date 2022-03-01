@@ -9,6 +9,7 @@
 #include "python/with.h"
 
 #include "ui/widgets/modal.h"
+#include "core/util.h"
 
 #include "implot.h"
 #include "imgui_internal.h"
@@ -35,8 +36,9 @@ void MainApp::InitializationBeforeLoop() {
         m_open_error = m_workspace.loadIntoCurrent(last.path);
 
     ImPlot::CreateContext();
+    // m_workspace.setCompression(false);
+    // m_workspace.save("non_compressed", m_workspace.getCurrentManager());
     // m_workspace.setCompression(true);
-    // m_workspace.save("transfert_donnees_ancien", m_workspace.getCurrentManager());
 }
 
 void MainApp::AfterLoop() {
@@ -92,6 +94,7 @@ void MainApp::preload() {
 
 void MainApp::FrameUpdate() {
     preload();
+
 #ifdef IMGUI_HAS_VIEWPORT
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);

@@ -68,6 +68,7 @@ void ItemsState::fill_items() {
             m_loans[loan->date.format("%Y/%m/%d")][key].push_back(make_pair(loan));
         }
     }
+    m_fill_cols = false;
 }
 
 void ItemsState::edit_person(Item::Person_ptr person) {

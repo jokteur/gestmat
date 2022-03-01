@@ -3,6 +3,16 @@
 #include "ui/drawable.h"
 #include "ui/widgets/combo.h"
 #include "core/util.h"
+#include "implot.h"
+#include "implot_internal.h"
+
+struct Stat {
+    int loans = 0;
+    int returned = 0;
+
+    void addLoan() { loans++; }
+    void addReturned() { returned++; }
+};
 
 class ItemsStats : public Drawable {
 private:
@@ -29,8 +39,13 @@ private:
 
     std::map<std::string, Item::CategoryID> m_categories;
     std::map<std::string, Item::PropertyID> m_properties;
-    Date m_start;
+
+    std::map<long long int, Stat> m_timeline_stats;
+    int m_timeline_max_y;
     Date m_timeline_begin;
+    ImPlotRect m_rect;
+
+    Date m_start;
     Date m_end = getCurrentDate();
     Item::CategoryID m_cat_id;
     std::string m_cat_name;
@@ -48,6 +63,7 @@ private:
     void reset();
     void set_properties_widget();
     void update_widget();
+    void timeline_widget();
 
     void fill_items();
     void show_row(Item::ItemID item, Item::Category_ptr cat);

@@ -6,6 +6,27 @@
 
 #pragma warning(disable : 4996) //_CRT_SECURE_NO_WARNINGS
 
+long long int core::toTimestamp(core::Date date) {
+    int y = (int)date.getYear();
+    int m = (int)date.getMonth();
+    int d = (int)date.getDay();
+
+
+    std::tm tm;
+    tm.tm_hour = 12;
+    tm.tm_min = 0;
+    tm.tm_sec = 0;
+    tm.tm_year = y - 1900;
+    tm.tm_mon = m - 1;
+    tm.tm_mday = d;
+    // tm.tm_wday = day_of_week(y, m, d);
+    // tm.tm_yday = day_of_year(y, m, d);
+
+    time_t time = std::mktime(&tm);
+
+    return time;
+}
+
 core::Date::Date(uint8_t day_, uint8_t month_, uint16_t year_) {
     day = day_;
     month = month_;

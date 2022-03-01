@@ -51,6 +51,7 @@ namespace core {
             for (auto& pair : m_subscriber_ids) {
                 pair.second = true;
             }
+            std::cout << Base::getID() << " " << Base::getIDs().size() << std::endl;
         }
 
         bool Manager::isChanged(long long int id) {
@@ -109,6 +110,7 @@ namespace core {
             }
         }
         void Manager::buildIDSet() {
+            Base::getIDs().clear();
             add_to_set<ItemID, Item_ptr>(m_registered_items);
             add_to_set<ItemID, Item_ptr>(m_retired_items);
             add_to_set<CategoryID, Category_ptr>(m_registered_categories);
@@ -119,6 +121,8 @@ namespace core {
             add_to_set<PersonID, Person_ptr>(m_retired_persons);
             add_to_set<LoanID, Loan_ptr>(m_registered_loans);
             add_to_set<LoanID, Loan_ptr>(m_retired_loans);
+
+            Base::setID(100);
         }
 
         std::vector<ObjectID> intersect(std::set<ObjectID> v1, std::set<ObjectID> v2) {
@@ -493,11 +497,15 @@ namespace core {
         }
 
         bool Manager::retireLoan(LoanID loan_id, core::Date date_back) {
-            bool ret = exchange_btw_maps<LoanID, Loan_ptr>(m_registered_loans, m_retired_loans, loan_id);
-            if (!ret)
-                return false;
+            exchange_btw_maps<LoanID, Loan_ptr>(m_registered_loans, m_retired_loans, loan_id);
+            // if (!ret)
+            //     return false;
 
-            Loan_ptr loan = getLoan(loan_id).value();
+            auto loan_ret = getLoan(loan_id);
+            if (!loan_ret.has_value())
+                return false;
+            Loan_ptr loan = loan_ret.value();
+
             loan->date_back = date_back;
 
             if (m_item_loan_map.find(loan->item) != m_item_loan_map.end()) {
@@ -511,6 +519,7 @@ namespace core {
                 m_person_loan_map.erase(loan->person);
                 exchange_btw_maps<PersonID, Person_ptr>(m_registered_persons, m_retired_persons, loan->person);
             }
+
             m_past_item_loan_map[loan->item].insert(loan_id);
             m_past_person_loan_map[loan->person].insert(loan_id);
 

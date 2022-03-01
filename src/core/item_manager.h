@@ -8,6 +8,7 @@
 #include <ctime>
 #include <memory>
 #include <chrono>
+#include <climits>
 
 #include "util.h"
 #include <nlohmann/json.hpp>
@@ -35,9 +36,15 @@ namespace core {
             Base() {
                 while (_ids.contains(ID)) {
                     ID++;
+                    if (ID >= LLONG_MAX - 10)
+                        ID = 0;
                 }
                 id = ID;
                 _ids.insert(id);
+            }
+
+            static std::set<ObjectID>& getIDs() {
+                return _ids;
             }
 
             static void addID(ObjectID id) {

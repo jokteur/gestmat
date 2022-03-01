@@ -59,8 +59,9 @@ namespace core {
         std::string format(std::string fmt);
     };
 
-    Date getCurrentDate();
+    long long int toTimestamp(Date date);
 
+    Date getCurrentDate();
 
     enum Duration {
         ONE_WEEK,
@@ -79,6 +80,7 @@ namespace core {
         ELEVEN_MONTHS,
         ONE_YEAR
     };
+
 
     int day_of_year(int y, int m, int d);
 
