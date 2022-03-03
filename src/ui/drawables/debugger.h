@@ -21,6 +21,9 @@ namespace Debug {
         void item_info(ItemID item_id);
         void person_info(PersonID person_id);
 
+        // Useful for removing sensitive data
+        void scramble_data();
+
         void show_item(ItemID item_id, long long int counter);
         void show_person(PersonID person_id, long long int counter);
         void show_loan(LoanID loan_id, long long int counter);

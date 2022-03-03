@@ -1,6 +1,10 @@
+#include <random>
+
 #include "debugger.h"
 #include "ui/imgui_util.h"
 #include "imgui_stdlib.h"
+
+#include "core/names.h"
 
 namespace Debug {
     using namespace Item;
@@ -44,6 +48,75 @@ namespace Debug {
                     m_discrepancies_persons.insert(pair.first);
                 }
             }
+        }
+    }
+
+    void Debugger::scramble_data() {
+        auto names = getNames();
+        auto surnames = getSurnames();
+        std::vector<std::string> places;
+        for (int i = 15; i <= 44;i++) {
+            for (int j = 400;j <= 800;) {
+                places.push_back(std::to_string(j + i));
+                j += 100;
+            }
+        }
+        for (int i = 0;i < 10;i++) {
+            places.push_back("SIB");
+            places.push_back("SIC");
+        }
+
+        std::random_device dev;
+        std::mt19937 rng(dev());
+        std::uniform_int_distribution<std::mt19937::result_type> names_dist(0, (int)names.size() - 1);
+        std::uniform_int_distribution<std::mt19937::result_type> surnames_dist(0, (int)surnames.size() - 1);
+        std::uniform_int_distribution<std::mt19937::result_type> day_dist(1, 31);
+        std::uniform_int_distribution<std::mt19937::result_type> month_dist(1, 12);
+        std::uniform_int_distribution<std::mt19937::result_type> year_dist(1920, 2001);
+        std::uniform_int_distribution<std::mt19937::result_type> place_dist(0, (int)places.size() - 1);
+        std::uniform_int_distribution<std::mt19937::result_type> date_dist(0, 2);
+
+        // First replace all the names
+        for (auto& pair : m_manager->m_registered_persons) {
+            pair.second->name = names[(int)names_dist(rng)];
+            pair.second->surname = surnames[(int)surnames_dist(rng)];
+            Date date;
+            while (!date.isValid()) {
+                date = Date{
+                    (uint8_t)day_dist(rng),
+                    (uint8_t)month_dist(rng),
+                    (uint16_t)year_dist(rng) };
+            }
+            pair.second->birthday = date;
+            pair.second->place = places[place_dist(rng)];
+        }
+        // First replace all the names
+        for (auto& pair : m_manager->m_retired_persons) {
+            pair.second->name = names[(int)names_dist(rng)];
+            pair.second->surname = surnames[(int)surnames_dist(rng)];
+            Date date;
+            while (!date.isValid()) {
+                date = Date{
+                    (uint8_t)day_dist(rng),
+                    (uint8_t)month_dist(rng),
+                    (uint16_t)year_dist(rng) };
+            }
+            pair.second->birthday = date;
+            pair.second->place = places[place_dist(rng)];
+        }
+        int i = 0;
+        for (auto& pair : m_manager->m_registered_loans) {
+            if (i % 2 == 1)
+                continue;
+            Date date = pair.second->date;
+            Date date_scrambled = Date{
+                (uint8_t)((int)date.getDay() + date_dist(rng) - 1),
+                (uint8_t)((int)date.getMonth() + date_dist(rng) - 1),
+                date.getYear() };
+            if (date_scrambled.isValid()) {
+                pair.second->date = date_scrambled;
+            }
+            i++;
         }
     }
 
@@ -185,6 +258,9 @@ namespace Debug {
         if (ImGui::Button("ok")) {
             double num = std::stod(m_global_id);
             Base::setID((int)num);
+        }
+        if (ImGui::Button("Mélanger et anonymiser données")) {
+            scramble_data();
         }
         ImGui::Separator();
         if (ImGui::TreeNode("Emprunts dupliqués")) {
