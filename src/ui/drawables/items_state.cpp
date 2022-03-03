@@ -146,7 +146,11 @@ void ItemsState::show_row(std::vector<std::pair<Filter, Item::Loan_ptr>> loans) 
 
         // std::cout << loans.size() << std::endl;
 
-    auto person = m_manager->getPerson(loans[0].second->person).value();
+    auto person_res = m_manager->getPerson(loans[0].second->person);
+    if (!person_res.has_value())
+        return;
+    auto person = person_res.value();
+
     // std::cout << person->name << std::endl;
     ImGui::TableSetColumnIndex(SURNAME);
     ImGui::Text(person->surname.c_str());

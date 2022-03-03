@@ -234,7 +234,10 @@ void ShowItem::FrameUpdate() {
     if (m_item == nullptr)
         return;
     ImGui::SameLine();
-    auto cat = m_manager->getCategory(m_item->category).value();
+    auto cat_res = m_manager->getCategory(m_item->category);
+    if (!cat_res.has_value())
+        return;
+    auto cat = cat_res.value();
     ImGui::Text("Objet sélectionné dans");
     Tempo::PushFont(m_ui_state->font_italic);
     ImGui::SameLine();

@@ -68,11 +68,34 @@ std::string getTime(DateTime time) {
 }
 
 void HistoryWidget::FrameUpdate() {
+    FrameUpdate(std::vector<Item::File>());
+}
+
+void HistoryWidget::show(bool scroll) {
+    m_show = true;
+    m_set_scroll = true & scroll;
+    m_is_set = false;
+}
+
+void HistoryWidget::FrameUpdate(std::vector<Item::File> files) {
     if (!m_show)
         return;
-    ImGui::Begin("Historique", &m_show);
 
-    auto files = m_workspace.getCompatibleFiles();
+    bool windowed = files.empty();
+    if (files.empty()) {
+        ImGui::Begin("Historique", &m_show);
+        if (!m_is_set) {
+            m_is_set = true;
+            m_files = m_workspace.getCompatibleFiles();
+        }
+    }
+    else {
+        if (!m_is_set) {
+            m_is_set = true;
+            m_files = files;
+        }
+    }
+
     int prev_day = 0;
     int prev_month = 0;
     int prev_year = 0;
@@ -80,7 +103,7 @@ void HistoryWidget::FrameUpdate() {
     bool draw_month = false;
     bool first_day = true;
     bool first_month = true;
-    for (auto file : files) {
+    for (auto file : m_files) {
         auto datetime = getDatetime(file.timestamp);
         if (prev_year != datetime.year) {
             if (draw_month)
@@ -156,7 +179,7 @@ void HistoryWidget::FrameUpdate() {
             }
         }
     }
-    if (files.size() > 0) {
+    if (m_files.size() > 0) {
         if (draw_day)
             ImGui::TreePop();
         if (draw_month)
@@ -173,7 +196,8 @@ void HistoryWidget::FrameUpdate() {
     m_vMax.x += ImGui::GetWindowPos().x;
     m_vMax.y += ImGui::GetWindowPos().y;
 
-    ImGui::End();
+    if (windowed)
+        ImGui::End();
 }
 void HistoryWidget::previewBar() {
     auto& style = ImGui::GetStyle();
@@ -183,6 +207,10 @@ void HistoryWidget::previewBar() {
     ImGui::Begin("Previz_widget", 0,
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 
+    if (m_current_file == nullptr) {
+        ImGui::End();
+        return;
+    }
     auto datetime = getDatetime(m_current_file->timestamp);
     std::string day = getDay(datetime.year, datetime.month, datetime.day);
     std::string txt = "Prévisualisation du ";
@@ -260,7 +288,8 @@ void HistoryWidget::abandon() {
     m_current_file = nullptr;
     m_ui_state->read_only = false;
     Tempo::EventQueue::getInstance().post(std::make_shared<Tempo::Event>("change_manager"));
-    m_workspace.setCurrentManager(m_manager);
+    if (m_manager != nullptr)
+        m_workspace.setCurrentManager(m_manager);
 }
 
 void HistoryWidget::BeforeFrameUpdate() {

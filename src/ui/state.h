@@ -5,6 +5,7 @@
 
 struct UIState {
     bool read_only = false;
+    bool restauration = false;
     long long int imID = 100000000;
 
     // Fonts

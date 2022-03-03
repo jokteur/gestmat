@@ -4,9 +4,13 @@
 #include "python/py_api.h"
 #include "python/with.h"
 
+#include <windows.h>
+#include <direct.h>
+#include <shlobj.h>
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include <tempo.h>
 
 namespace core {
     namespace Item {
@@ -47,6 +51,17 @@ namespace core {
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Loan, note, item, date, date_back, person, remainder_date, id);
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Person, name, surname, place, notes, birthday, id);
         NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Item, category, notes, property_values, id);
+
+        std::string Workspace::_get_desktop_path() {
+            TCHAR appData[MAX_PATH];
+            if (SUCCEEDED(SHGetFolderPath(NULL,
+                CSIDL_DESKTOPDIRECTORY | CSIDL_FLAG_CREATE,
+                NULL,
+                SHGFP_TYPE_CURRENT,
+                appData)))
+                return std::string(appData);
+            return "";
+        }
 
         bool Workspace::_set_my_docs_dir() {
             auto state = PyGILState_Ensure();
@@ -361,7 +376,7 @@ namespace core {
             // One big ugly function to save data to
             // an excel file
 
-            std::string filename = "\\" + getCurrentDate().format("%Y-%m-%d-")
+            std::string filename = "\\" + getCurrentDate().format("%Y-%m-%d")
                 + std::string("-materiel_ergo.xlsx");
 
             auto state = PyGILState_Ensure();
@@ -492,6 +507,73 @@ namespace core {
 
             PyGILState_Release(state);
             return "";
+        }
+
+        bool Workspace::exportToDesktop() {
+            try {
+                std::string desktop = _get_desktop_path();
+                std::string path = desktop + "\\gestion_materiel";
+                std::filesystem::create_directory(path);
+                std::string ret = _export_to_excel({ path });
+                if (ret.empty())
+                    return true;
+                else {
+                    std::cout << ret << std::endl;
+                    return false;
+                }
+            }
+            catch (std::exception& e) {
+                std::cout << e.what() << std::endl;
+                return false;
+            }
+        }
+
+        std::optional<std::vector<File>> Workspace::restoreFromDocuments(bool commit) {
+            std::string path = m_docs_dir + "\\" + DIR_NAME;
+            auto files = getCompatibleFiles(path);
+
+            if (commit) {
+                bool success = true;
+                try {
+                    std::filesystem::copy(DIR_NAME + "\\",
+                        DIR_NAME + getCurrentDate().format("-backup-%Y-%m-%d") + "\\");
+                }
+                catch (std::exception& e) {
+                    std::cout << e.what() << std::endl;
+                    success = false;
+                }
+                try {
+                    std::filesystem::remove_all(DIR_NAME);
+                }
+                catch (std::exception& e) {
+                    std::cout << e.what() << std::endl;
+                    success = false;
+                }
+                try {
+                    std::filesystem::copy(m_docs_dir + "\\" + DIR_NAME + "\\",
+                        DIR_NAME + "\\");
+
+                    auto new_files = getCompatibleFiles();
+                    core::Item::File last;
+                    for (const auto& file : new_files) {
+                        last = file;
+                    }
+                    if (last.path.empty())
+                        setCurrentManager(std::make_shared<Manager>());
+                    else
+                        loadIntoCurrent(last.path);
+
+                    Tempo::EventQueue::getInstance().post(std::make_shared<Tempo::Event>("change_manager"));
+                }
+                catch (std::exception& e) {
+                    std::cout << e.what() << std::endl;
+                    success = false;
+                }
+
+                if (!success)
+                    return std::optional<std::vector<File>>();
+            }
+            return std::optional<std::vector<File>>(files);
         }
 
         bool Workspace::saveToExcel() {

@@ -34,6 +34,8 @@ namespace core {
 
             std::string _get_dir_path();
 
+            std::string _get_desktop_path();
+
             bool _save(std::string path, const std::string& content, bool binary);
             std::string _load(const std::string& path, Manager_ptr manager);
 
@@ -59,6 +61,9 @@ namespace core {
             std::string getDocsDir();
 
             bool saveToExcel();
+
+            bool exportToDesktop();
+            std::optional<std::vector<File>> restoreFromDocuments(bool commit);
 
             bool setWorkDir(const std::string& path);
             void setCurrentManager(Manager_ptr manager);
