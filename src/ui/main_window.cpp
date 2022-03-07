@@ -146,8 +146,10 @@ void MainApp::FrameUpdate() {
     ImGui::PopStyleVar();
     Modals::getInstance().FrameUpdate();
     ImGui::End();
-    if (m_open)
-        ImGui::ShowDemoWindow(&m_open);
+
+
+    // if (m_open)
+    // ImGui::ShowDemoWindow(&m_open);
 }
 void MainApp::BeforeFrameUpdate() {
     m_menubar->BeforeFrameUpdate();

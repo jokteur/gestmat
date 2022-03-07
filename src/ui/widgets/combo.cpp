@@ -3,9 +3,10 @@
 #include "imgui_stdlib.h"
 #include "ui/imgui_util.h"
 
-Combo::Combo(UIState_ptr ui_state, std::vector<std::string> select, int default_select, bool empty_first)
+Combo::Combo(UIState_ptr ui_state, std::vector<std::string> select, int default_select, bool empty_first, bool max_size)
     : Drawable(ui_state) {
     m_selected = default_select;
+    m_max_length = max_size;
     if (empty_first) {
         m_select.push_back("##empty_select");
     }
@@ -18,10 +19,11 @@ Combo::Combo(UIState_ptr ui_state, std::vector<std::string> select, int default_
     m_id = m_ui_state->imID;
     m_ui_state->imID++;
 }
-Combo::Combo(UIState_ptr ui_state, std::vector<std::string> select, std::string default_select, bool empty_first)
+Combo::Combo(UIState_ptr ui_state, std::vector<std::string> select, std::string default_select, bool empty_first, bool max_size)
     : Drawable(ui_state) {
 
     int i = 0;
+    m_max_length = max_size;
     if (empty_first) {
         m_select.push_back("##empty_select");
         i++;
@@ -73,7 +75,10 @@ int Combo::getSelected() {
 }
 
 void Combo::FrameUpdate() {
-    if (ImGui::BeginCombo(labelize(m_id, "##combo_select").c_str(), m_select[m_selected].c_str())) {
+    ImGuiComboFlags flags = 0;
+    if (m_max_length)
+        flags |= ImGuiComboFlags_HeightLargest;
+    if (ImGui::BeginCombo(labelize(m_id, "##combo_select").c_str(), m_select[m_selected].c_str(), flags)) {
         for (int n = 0;n < m_select.size();n++) {
             bool is_selected = m_select[n] == m_select[m_selected];
             if (ImGui::Selectable(m_select[n].c_str(), is_selected)) {

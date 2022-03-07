@@ -200,7 +200,7 @@ void ItemsStats::update_widget() {
             m_categories[cat->name] = cat_id;
             selections.push_back(cat->name);
         }
-        m_combo = std::make_shared<Combo>(m_ui_state, selections, "", true);
+        m_combo = std::make_shared<Combo>(m_ui_state, selections, "", true, true);
         set_properties_widget();
 
         double start = (double)toTimestamp(m_timeline_begin);

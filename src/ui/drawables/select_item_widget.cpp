@@ -17,7 +17,7 @@ void SelectItemWidget::setCategories() {
         cat_names.push_back(cat->name);
         m_categories[cat->name] = cat->id;
     }
-    m_cat_combo = std::make_shared<Combo>(m_ui_state, cat_names, 0, true);
+    m_cat_combo = std::make_shared<Combo>(m_ui_state, cat_names, 0, true, true);
 }
 void SelectItemWidget::BeforeFrameUpdate() {
     m_manager = m_workspace.getCurrentManager();

@@ -536,7 +536,7 @@ namespace core {
                 bool success = true;
                 try {
                     std::filesystem::copy(DIR_NAME + "\\",
-                        DIR_NAME + getCurrentDate().format("-backup-%Y-%m-%d") + "\\");
+                        DIR_NAME + getCurrentDate().format("-backup-%Y-%m-%d") + std::to_string(getTimestamp()) + "\\");
                 }
                 catch (std::exception& e) {
                     std::cout << e.what() << std::endl;
