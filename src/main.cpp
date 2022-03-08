@@ -10,7 +10,7 @@
 
 
 using namespace core;
-// #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 int main() {
     PyAPI::Handler::getInstance();
 
@@ -20,6 +20,8 @@ int main() {
     };
     config.maximized = true;
     config.imgui_config_flags = 0;
+
+    std::cout << "hello world" << std::endl;
 
     MainApp* app = new MainApp();
     Tempo::Run(app, config);
